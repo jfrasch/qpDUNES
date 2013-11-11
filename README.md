@@ -16,7 +16,7 @@ to compile.
 to test your successful installation.
 
 Please consult
-  `https://github.com/jfrasch/qpDUNES/wiki`
+  [https://github.com/jfrasch/qpDUNES/wiki](https://github.com/jfrasch/qpDUNES/wiki)
 for further information.	
 
 	
