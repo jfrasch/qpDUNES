@@ -73,6 +73,11 @@ return_t qpDUNES_setup(	qpData_t* const qpData,
 		}
 	}
 	qpData->nDttl = nDttl;
+	
+	if (nDttl != 0) {
+		qpDUNES_printError( qpData, __FILE__, __LINE__, "Sorry, affine constraints are not yet supported." );
+		return QPDUNES_ERR_INVALID_ARGUMENT;
+	}
 
 	qpData->intervals = (interval_t**)calloc( nI+1,sizeof(interval_t*) );
 
@@ -743,6 +748,10 @@ return_t qpDUNES_setupRegularInterval(	qpData_t* const qpData,
 		} /* end of write Hessian blocks */
 	} /* end of Hessian */
 	
+	if (H->sparsityType  < QPDUNES_DIAGONAL) {
+		qpDUNES_printError( qpData, __FILE__, __LINE__, "Sorry, only diagonal Hessians are supported so far." );
+		return QPDUNES_ERR_INVALID_ARGUMENT;
+	}
 	
 
 	/** (2) linear term of cost function */

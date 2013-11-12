@@ -41,17 +41,17 @@
 #endif
 
 
-#define __USE_ASSERTS__ 					/* check return values of routines rigorously (useful for debugging) */
-#undef __USE_ASSERTS__
+//#define __USE_ASSERTS__ 					/* check return values of routines rigorously (useful for debugging) */
+//#undef __USE_ASSERTS__
 
-#define __SUPPRESS_ALL_OUTPUT__			/* no printing */
-#undef __SUPPRESS_ALL_OUTPUT__
+//#define __SUPPRESS_ALL_OUTPUT__			/* no printing */
+//#undef __SUPPRESS_ALL_OUTPUT__
 
-#define __SUPPRESS_ALL_WARNINGS__			/* do not display warnings */
-#undef __SUPPRESS_ALL_WARNINGS__
+//#define __SUPPRESS_ALL_WARNINGS__			/* do not display warnings */
+//#undef __SUPPRESS_ALL_WARNINGS__
 
-#define __MEASURE_TIMINGS__					/* measure computation times */
-#undef __MEASURE_TIMINGS__
+//#define __MEASURE_TIMINGS__					/* measure computation times */
+//#undef __MEASURE_TIMINGS__
 
 #define __ANALYZE_FACTORIZATION__			/* log inverse Newton Hessian for analysis */
 #undef __ANALYZE_FACTORIZATION__

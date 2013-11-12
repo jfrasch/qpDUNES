@@ -47,7 +47,8 @@ DEF_TARGET = -o $@
 OMPFLAGS = 
 
 
-CCFLAGS = -Wall -pedantic -Wshadow -O3 -finline-functions -DLINUX -U__MEASURE_TIMINGS__ -U__ANALYZE_FACTORIZATION__ -std=c99		##C99 temporary to avoid warnings
+CCFLAGS = -Wall -pedantic -Wshadow -O3 -finline-functions -DLINUX -std=c99		##C99 temporary to avoid warnings
+																											
 
 QPDUNES_LIB         =  -L${SRCDIR} -lqpdunes
 
