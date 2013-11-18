@@ -710,7 +710,7 @@ void qpDUNES_printCholNewtonHessian(	const qpData_t* const qpData,
  *	\version 1.0beta
  *	\date 2013
  */
-void qpDUNES_printHeader( );
+void qpDUNES_printHeader( qpData_t* qpData );
 
 
 #endif	/* QPDUNES_UTILS_H */

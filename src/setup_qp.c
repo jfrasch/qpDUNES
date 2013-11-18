@@ -46,8 +46,6 @@ return_t qpDUNES_setup(	qpData_t* const qpData,
 						)
 {
 	uint_t ii, kk;
-	
-	qpDUNES_printHeader();
 
 	int_t nZ = nX+nU;
 
@@ -197,6 +195,9 @@ return_t qpDUNES_setup(	qpData_t* const qpData,
 	/* reset current active set to force initial Hessian factorization */
 	qpDUNES_indicateDataChange( qpData );
 
+	
+	qpDUNES_printHeader( qpData );
+	
 
 	return QPDUNES_OK;
 }

@@ -1155,21 +1155,24 @@ void qpDUNES_printCholNewtonHessian(	const qpData_t* const qpData,
  *  print qpDUNES header information
  *
  >>>>>                                            */
-void qpDUNES_printHeader( )
+void qpDUNES_printHeader( qpData_t* qpData )
 {
-	qpDUNES_printStrArgs( "\nqpDUNES -- A DUal NEwton Strategy for convex quadratic programming.\n" );
-	qpDUNES_printStrArgs( "Copyright (C) 2012-2014 by Janick Frasch and Hans Joachim Ferreau.\n" );
-	qpDUNES_printStrArgs( "Developed within the Optimization in Engineering Center (OPTEC) at \n" );
-	qpDUNES_printStrArgs( "KU Leuven, Belgium under supervision of Moritz Diehl. All rights\n" );
-	qpDUNES_printStrArgs( "reserved.\n\n" );
+	if ( qpData->options.printLevel > 0 ) {
+		qpDUNES_printStrArgs( "\nqpDUNES -- A DUal NEwton Strategy for convex quadratic programming.\n" );
+		qpDUNES_printStrArgs( "Copyright (C) 2012-2014 by Janick Frasch and Hans Joachim Ferreau.\n" );
+		qpDUNES_printStrArgs( "Developed within the Optimization in Engineering Center (OPTEC) at \n" );
+		qpDUNES_printStrArgs( "KU Leuven, Belgium under supervision of Moritz Diehl. All rights\n" );
+		qpDUNES_printStrArgs( "reserved.\n\n" );
 
-	qpDUNES_printStrArgs( "qpDUNES is distributed under the terms of the GNU Lesser\n" );
-	qpDUNES_printStrArgs( "General Public License 3 in the hope that it will be useful,\n" );
-	qpDUNES_printStrArgs( "but WITHOUT ANY WARRANTY; without even the implied warranty of\n" );
-	qpDUNES_printStrArgs( "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n" );
-	qpDUNES_printStrArgs( "GNU Lesser General Public License for more details.\n\n" );
+		qpDUNES_printStrArgs( "qpDUNES is distributed under the terms of the GNU Lesser\n" );
+		qpDUNES_printStrArgs( "General Public License 3 in the hope that it will be useful,\n" );
+		qpDUNES_printStrArgs( "but WITHOUT ANY WARRANTY; without even the implied warranty of\n" );
+		qpDUNES_printStrArgs( "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n" );
+		qpDUNES_printStrArgs( "GNU Lesser General Public License for more details.\n\n" );
+	}
 }
 /*<<< END OF qpDUNES_printHeader */
+
 
 
 
