@@ -36,7 +36,11 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <sys/time.h>
+
+#ifndef WIN32
+    #include <sys/time.h>
+#endif
+
 #include <qp/types.h>
 
 #ifdef __QPDUNES_PARALLEL__
@@ -152,7 +156,7 @@ return_t qpDUNES_setupZeroMatrix(	int_t nRows,
  *	\version 1.0beta
  *	\date 2012
  */
-return_t qpDUNES_setMatrixNull(	matrix_t* matrix
+return_t qpDUNES_setMatrixNull(	matrix_t* const matrix
 								);
 
 

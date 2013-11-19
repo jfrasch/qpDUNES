@@ -178,7 +178,7 @@ void initXUStyle( int nrhs, const mxArray* const prhs[] )
 	nU = (uint_t) mxGetN( Bptr );	/* get number of columns */
 	nZ = nX+nU;
 
-	for ( int_t ii=0; ii<nI; ++ii ) {
+	for ( uint_t ii=0; ii<nI; ++ii ) {
 		nD[ii] = nZ;
 	}
 	nD[nI] = nX;
@@ -344,7 +344,7 @@ void initZStyle( int nrhs, const mxArray* const prhs[] )
 	nU = nZ - nX;
 
 	/* TODO: deal with affine constraints! */
-	for ( int_t ii=0; ii<nI; ++ii ) {
+	for ( uint_t ii=0; ii<nI; ++ii ) {
 		/* 		nD[ii] = nZ; */
 		nD[ii] = 0;
 	}
@@ -382,7 +382,7 @@ void initZStyle( int nrhs, const mxArray* const prhs[] )
 	real_t* C = 0;
 	if (!isLTI) {
 		C = new real_t[nI*nX*nZ];
-		for (int kk=0; kk<nI; ++kk) {
+		for (uint_t kk=0; kk<nI; ++kk) {
 			convertFortranToC( &(C[kk*nX*nZ]), &(C_F[kk*nX*nZ]), nX, nZ );
 		}
 	}
@@ -392,7 +392,7 @@ void initZStyle( int nrhs, const mxArray* const prhs[] )
 	}
 
 	/* combine H and P if not xu-style inputs */
-	int_t cIdx, rIdx;
+	uint_t cIdx, rIdx;
 	real_t* H = 0;
 	if(!isLTI) {
 		H = new real_t[nI*nZ*nZ+nX*nX];
@@ -580,7 +580,7 @@ void updateZStyle( mpcProblem_t* mpcProblem, int nrhs, const mxArray* const prhs
 	/* only for C, D */
 	if (C_F != 0) {
 		C = new real_t[nI*nX*nZ];
-		for (int kk=0; kk<nI; ++kk) {
+		for (uint_t kk=0; kk<nI; ++kk) {
 			convertFortranToC( &(C[kk*nX*nZ]), &(C_F[kk*nX*nZ]), nX, nZ );
 		}
 	}
@@ -589,7 +589,7 @@ void updateZStyle( mpcProblem_t* mpcProblem, int nrhs, const mxArray* const prhs
 	}
 
 	/* combine H and P (only given if LTV system) */
-	int_t cIdx, rIdx;
+	uint_t cIdx, rIdx;
 	if( (H_in != 0) && (P != 0) ) {
 		H = new real_t[nI*nZ*nZ+nX*nX];
 		/* parse H and P Fortran-style (column-major); note that H and P are by definition self-transposed */

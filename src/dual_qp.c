@@ -39,18 +39,18 @@
 return_t qpDUNES_solve(qpData_t* const qpData) {
 	uint_t ii, kk;
 
-	int_t* itCntr = &(qpData->log.numIter);
-	*itCntr = 0;
-	return_t statusFlag; /* generic status flag */
-	int_t lastActSetChangeIdx = _NI_;
-
-	real_t objValIncumbent = qpData->options.QPDUNES_INFTY;
-
-	real_t tItStart, tItEnd, tQpStart, tQpEnd, tNwtnSetupStart, tNwtnSetupEnd,
+    real_t tItStart, tItEnd, tQpStart, tQpEnd, tNwtnSetupStart, tNwtnSetupEnd,
 			tNwtnFactorStart, tNwtnFactorEnd, tNwtnSolveStart, tNwtnSolveEnd,
 			tLineSearchStart, tLineSearchEnd, tDiff;
-
+    
+   	return_t statusFlag; /* generic status flag */
+    int_t lastActSetChangeIdx = _NI_;
+    real_t objValIncumbent = qpData->options.QPDUNES_INFTY;
+    
+	int_t* itCntr = &(qpData->log.numIter);
 	itLog_t* itLogPtr = &(qpData->log.itLog[0]);
+    
+    *itCntr = 0;
 	itLogPtr->itNbr = 0;
 
 	/** (1) todo: initialize local active sets (at least when using qpOASES) with initial guess from previous iteration */

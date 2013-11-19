@@ -51,7 +51,7 @@ IFLAGS  = [ '-I.',' ', ...
 if ( ispc == 0 )
 	CPPFLAGS  = [ IFLAGS, '-largeArrayDims -D__cpluplus -D__MATLAB__ -cxx -O -DLINUX CFLAGS=''$CFLAGS -fPIC''', ' ' ]; 
 else
-	CPPFLAGS  = [ IFLAGS, '-largeArrayDims -D__cpluplus -D__MATLAB__ -cxx -O -DWIN32', ' ' ];
+	CPPFLAGS  = [ IFLAGS, '-largeArrayDims -D__cpluplus -D__MATLAB__ -O -DWIN32', ' ' ];
 end
 
 QPDUNES_OBJECTS =	[	QPDUNESPATH, 'src/stage_qp_solver_clipping.c ',...

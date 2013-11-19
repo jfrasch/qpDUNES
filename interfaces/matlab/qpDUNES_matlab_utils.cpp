@@ -116,6 +116,77 @@ void obtainOutputs( const mpcProblem_t* const mpcProblem,
 }
 
 
+/*
+ *	d o u b l e T o B o o l e a n
+ */
+boolean_t doubleToBoolean( double from )
+{
+    if ( fabs( from ) < 1e-12 )
+        return QPDUNES_FALSE;
+    else
+        return QPDUNES_TRUE;
+}
+
+
+/*
+ *	d o u b l e T o L o g L e v e l
+ */
+logLevel_t doubleToLogLevel( double from )
+{
+    if ( fabs( from ) < 1e-12 )
+        return QPDUNES_LOG_OFF;
+    else if ( fabs( from - 1.0 ) < 1e-12 )
+        return QPDUNES_LOG_ITERATIONS;
+    else if ( fabs( from - 2.0 ) < 1e-12 )
+        return QPDUNES_LOG_ALL_DATA;
+    
+    return QPDUNES_LOG_OFF;
+}
+
+
+/*
+ *	d o u b l e T o H s s n R e g T y p e
+ */
+nwtnHssnRegType_t doubleToHssnRegType( double from )
+{
+    if ( fabs( from ) < 1e-12 )
+        return QPDUNES_REG_LEVENBERG_MARQUARDT;
+    else if ( fabs( from - 1.0 ) < 1e-12 )
+        return QPDUNES_REG_NORMALIZED_LEVENBERG_MARQUARDT;
+    else if ( fabs( from - 2.0 ) < 1e-12 )
+        return QPDUNES_REG_SINGULAR_DIRECTIONS;
+    else if ( fabs( from - 3.0 ) < 1e-12 )
+        return QPDUNES_REG_UNCONSTRAINED_HESSIAN;
+    else if ( fabs( from - 4.0 ) < 1e-12 )
+        return QPDUNES_REG_GRADIENT_STEP;
+    
+    return QPDUNES_REG_LEVENBERG_MARQUARDT;
+}
+
+
+/*
+ *	d o u b l e T o L i n e S e a r c h T y p e
+ */
+lineSearchType_t doubleToLineSearchType( double from )
+{
+    if ( fabs( from ) < 1e-12 )
+        return QPDUNES_LS_BACKTRACKING_LS;
+    else if ( fabs( from - 1.0 ) < 1e-12 )
+        return QPDUNES_LS_BACKTRACKING_LS_WITH_AS_CHANGE;
+    else if ( fabs( from - 2.0 ) < 1e-12 )
+        return QPDUNES_LS_GOLDEN_SECTION_LS;
+    else if ( fabs( from - 3.0 ) < 1e-12 )
+        return QPDUNES_LS_GRADIENT_BISECTION_LS;
+    else if ( fabs( from - 4.0 ) < 1e-12 )
+        return QPDUNES_LS_ACCELERATED_GRADIENT_BISECTION_LS;
+    else if ( fabs( from - 5.0 ) < 1e-12 )
+        return QPDUNES_LS_GRID_LS;
+    else if ( fabs( from - 6.0 ) < 1e-12 )
+        return QPDUNES_LS_ACCELERATED_GRID_LS;
+    
+    return QPDUNES_LS_BACKTRACKING_LS;
+}
+
 
 /*
  *	h a s O p t i o n s V a l u e
@@ -159,7 +230,7 @@ return_t setupOptions( qpOptions_t* options, const mxArray* const optionsPtr )
 
 	/* logging */
 	if ( getOptionValue( optionsPtr, "logLevel", &optionValue ) == QPDUNES_TRUE )
-		options->logLevel = (logLevel_t)*optionValue;
+		options->logLevel = doubleToLogLevel( *optionValue );
 
 
 	/* printing */
@@ -170,10 +241,10 @@ return_t setupOptions( qpOptions_t* options, const mxArray* const optionsPtr )
 		options->printIntervalHeader = (int_t)*optionValue;
 
 	if ( getOptionValue( optionsPtr, "printIterationTiming", &optionValue ) == QPDUNES_TRUE )
-		options->printIterationTiming = (boolean_t)*optionValue;
+		options->printIterationTiming = doubleToBoolean( *optionValue );
 
 	if ( getOptionValue( optionsPtr, "printLineSearchTiming", &optionValue ) == QPDUNES_TRUE )
-		options->printLineSearchTiming = (boolean_t)*optionValue;
+		options->printLineSearchTiming = doubleToBoolean( *optionValue );
 
 
 	/* numerical tolerances */
@@ -195,12 +266,12 @@ return_t setupOptions( qpOptions_t* options, const mxArray* const optionsPtr )
 
 	/* other options */
 	if ( getOptionValue( optionsPtr, "checkForInfeasibility", &optionValue ) == QPDUNES_TRUE )
-		options->checkForInfeasibility = (boolean_t)*optionValue;
+		options->checkForInfeasibility = doubleToBoolean( *optionValue );
 
 
 	/* regularization options */
 	if ( getOptionValue( optionsPtr, "regType", &optionValue ) == QPDUNES_TRUE )
-		options->regType = (nwtnHssnRegType_t)*optionValue;
+		options->regType = doubleToHssnRegType( *optionValue );
 
 	if ( getOptionValue( optionsPtr, "regParam", &optionValue ) == QPDUNES_TRUE )
 		options->regParam = (real_t)*optionValue;
@@ -208,7 +279,7 @@ return_t setupOptions( qpOptions_t* options, const mxArray* const optionsPtr )
 
 	/* line search options */
 	if ( getOptionValue( optionsPtr, "lsType", &optionValue ) == QPDUNES_TRUE )
-		options->lsType	= (lineSearchType_t)*optionValue;
+		options->lsType	= doubleToLineSearchType( *optionValue );
 
 	if ( getOptionValue( optionsPtr, "lineSearchReductionFactor", &optionValue ) == QPDUNES_TRUE )
 		options->lineSearchReductionFactor = (real_t)*optionValue;
@@ -426,14 +497,14 @@ void fullLogging( const mpcProblem_t* const mpcProblem, mxArray** const logPtr )
 		mxSetFieldByNumber( *logPtr, ii,yIdx, dataPtr );															/* pass to struct */
 
 		/* ieqStatus */
-		int nDmax = -1;
-		for (int kk=0; kk<nI; ++kk) {
-			if (mpcProblem->qpData.intervals[kk]->nD > nDmax)	nDmax = mpcProblem->qpData.intervals[kk]->nD;
+		int_t nDmax = -1;
+		for( int_t kk=0; kk<nI; ++kk) {
+			if ((int_t)mpcProblem->qpData.intervals[kk]->nD > nDmax)	nDmax = (int_t)mpcProblem->qpData.intervals[kk]->nD;
 		}
 		dataPtr = mxCreateDoubleMatrix(nI,nDmax+nZ,mxREAL);							/* allocate array */
 		double* data = mxGetPr( dataPtr );
-		for( int kk=0; kk<nI; ++kk ) {											/* copy data to array */
-			for( int jj=0; jj<mpcProblem->qpData.intervals[kk]->nD; ++jj ) {											/* copy data to array */
+		for( uint_t kk=0; kk<(uint_t)nI; ++kk ) {											/* copy data to array */
+			for( uint_t jj=0; jj<mpcProblem->qpData.intervals[kk]->nD; ++jj ) {											/* copy data to array */
 				data[kk*nDmax+jj] = (double)mpcProblem->qpData.log.itLog[ii].ieqStatus[kk][jj];							/* cast to double while copying */
 			}
 		}

@@ -43,7 +43,7 @@ qpoasesObject_t* qpOASES_contructor( qpData_t* qpData,
 									 int_t nV,
 							 	 	 int_t nC )
 {
-
+    return 0;
 }
 /*<<< END OF qpOASES_contructor */
 
@@ -74,7 +74,7 @@ return_t qpOASES_setup( qpData_t* qpData,
 						d_vector_t* dLow,
 						d_vector_t* dUpp	)
 {
-
+    return QPDUNES_OK;
 }
 /*<<< END OF qpOASES_setup */
 
@@ -92,7 +92,7 @@ return_t qpOASES_updateStageData(	qpData_t* const qpData,
 									const z_vector_t* const lambdaK1
 									)
 {
-
+    return QPDUNES_OK;
 }
 /*<<< END OF qpOASES_updateStageData */
 
@@ -106,7 +106,7 @@ return_t qpOASES_hotstart( 	qpData_t* qpData,
 							interval_t* interval,
 							z_vector_t* q 				)
 {
-
+    return QPDUNES_OK;
 }
 /*<<< END OF qpOASES_hotstart */
 
@@ -119,7 +119,7 @@ return_t qpOASES_getCholZTHZ( 	qpData_t* qpData,
 								qpoasesObject_t* qpoasesObject,
 								zz_matrix_t* cholZTHZ 				)
 {
-
+    return QPDUNES_OK;
 }
 /*<<< END OF qp42_solveLocalQP */
 
@@ -133,7 +133,7 @@ return_t qpOASES_getZT( qpData_t* qpData,
 						int_t* nFree,
 						zz_matrix_t* ZT 				)
 {
-
+    return QPDUNES_OK;
 }
 /*<<< END OF qp42_solveLocalQP */
 
@@ -151,7 +151,7 @@ return_t qpOASES_doStep( qpData_t* const qpData,
 						 z_vector_t* const qCandidate,
 						 real_t* const p				)
 {
-
+    return QPDUNES_OK;
 }
 /*<<< END OF qpOASES_doStep */
 

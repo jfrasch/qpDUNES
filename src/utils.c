@@ -307,7 +307,7 @@ return_t qpDUNES_updateSimpleBoundVector(	qpData_t* qpData,
 										const real_t* const uBnd
 										)
 {
-	int_t i;
+	uint_t i;
 	
 	if ( dBnd != 0 ) {
 		for( i=0; i<_NX_+_NU_; ++i ) {
@@ -685,6 +685,10 @@ void qpDUNES_printStrArgs(	const char* const string,
 						...
 						)
 {
+    #ifdef __MATLAB__
+        char buffer[MAX_STR_LEN];
+    #endif
+	
 	#ifndef __SUPPRESS_ALL_OUTPUT__
 	/* get printf arguments list */
 	va_list printArgs;
@@ -692,8 +696,7 @@ void qpDUNES_printStrArgs(	const char* const string,
 	
 	/* print output */
 	#ifdef __MATLAB__
-		char buffer[MAX_STR_LEN];
-		vsprintf(buffer,string, printArgs);
+		vsprintf( buffer,string, printArgs );
 		va_end( printArgs );
 
 		mexPrintf( "%s", buffer );
@@ -1027,7 +1030,7 @@ void qpDUNES_printNewtonHessian(	const qpData_t* const qpData,
 								const xn2x_matrix_t* const hessian
 								)
 {
-	int_t ii, jj, kk;
+	uint_t ii, jj, kk;
 
 	qpDUNES_printStrArgs( "NewtonHessian = ...\n" );
 	qpDUNES_printStrArgs( "[\n" );
@@ -1035,16 +1038,16 @@ void qpDUNES_printNewtonHessian(	const qpData_t* const qpData,
 	for( kk=0; kk<_NI_; ++kk ) {
 		for( ii=0; ii<_NX_; ++ii ) {
 			qpDUNES_printStrArgs( "[" );
-			for( jj=0; jj < ((kk-1) * (int)_NX_); ++jj ) {  /* begin of row */  /* need casting from uint_t to int_t to enable safe comparisons */
+			for( jj=0; jj < ((kk-1) * (uint_t)_NX_); ++jj ) {  /* begin of row */  /* need casting from uint_t to int_t to enable safe comparisons */
 				qpDUNES_printStrArgs( " 0.0\t\t\t" );
 			}
-			for( jj=0; jj<(kk > 0 ? 1 : 0)*(int)_NX_; ++jj ) {  /* subdiagonal block */
+			for( jj=0; jj<(kk > 0 ? 1 : 0)*(uint_t)_NX_; ++jj ) {  /* subdiagonal block */
 				qpDUNES_printStrArgs( "% .*e\t", PRINTING_PRECISION, accHessian( kk, -1, ii, jj ) );	/* TODO: use variable from qpOptions Struct; currently defined in types.h */
 			}
 			for( jj=0; jj<_NX_; ++jj ) {	/* diagonal block */
 				qpDUNES_printStrArgs( "% .*e\t", PRINTING_PRECISION, accHessian( kk, 0, ii, jj ) );	/* TODO: use variable from qpOptions Struct; currently defined in types.h */
 			}
-			for( jj=0; jj<(kk < _NI_-1 ? 1 : 0)*(int)_NX_; ++jj ) {  /* superdiagonal block */
+			for( jj=0; jj<(kk < _NI_-1 ? 1 : 0)*(uint_t)_NX_; ++jj ) {  /* superdiagonal block */
 				qpDUNES_printStrArgs( "% .*e\t", PRINTING_PRECISION, accHessian( kk+1, -1, jj, ii ) );	/* TODO: use variable from qpOptions Struct; currently defined in types.h */
 			}
 			for( jj=(kk+2)*_NX_; jj<_NI_*_NX_; ++jj ) {  /* remaining row */
@@ -1071,7 +1074,7 @@ void qpDUNES_printNewtonHessianToFile(	const qpData_t* const qpData,
 									...
 									)
 {
-	int_t ii, jj, kk;
+	uint_t ii, jj, kk;
 
 	va_list printArgs;
 
@@ -1087,7 +1090,7 @@ void qpDUNES_printNewtonHessianToFile(	const qpData_t* const qpData,
 	for( kk=0; kk<_NI_; ++kk ) {
 		for( ii=0; ii<_NX_; ++ii ) {
 			qpDUNES_printStrArgsToFile( filePtr,  "" );
-			for( jj=0; jj < ((kk-1) * (int)_NX_); ++jj ) {  /* begin of row */  /* need casting from uint_t to int_t to enable safe comparisons */
+			for( jj=0; jj < ((kk-1) * (uint_t)_NX_); ++jj ) {  /* begin of row */  /* need casting from uint_t to int_t to enable safe comparisons */
 				qpDUNES_printStrArgsToFile( filePtr, " 0.0\t\t\t" );
 			}
 			for( jj=0; jj<(kk > 0 ? 1 : 0)*_NX_; ++jj ) {  /* subdiagonal block */
@@ -1122,7 +1125,7 @@ void qpDUNES_printCholNewtonHessian(	const qpData_t* const qpData,
 									const xn2x_matrix_t* const cholHessian
 									)
 {
-	int_t ii, jj, kk;
+	uint_t ii, jj, kk;
 
 	qpDUNES_printStrArgs( "Cholesky factor of Newton Hessian\n" );
 	qpDUNES_printStrArgs( "[\n" );
@@ -1130,7 +1133,7 @@ void qpDUNES_printCholNewtonHessian(	const qpData_t* const qpData,
 	for( kk=0; kk<_NI_; ++kk ) {
 		for( ii=0; ii<_NX_; ++ii ) {
 			qpDUNES_printStrArgs( "[" );
-			for( jj=0; jj < ((kk-1) * (int)_NX_); ++jj ) {  /* begin of row */  /* need casting from uint_t to int_t to enable safe comparisons */
+			for( jj=0; jj < ((kk-1) * (uint_t)_NX_); ++jj ) {  /* begin of row */  /* need casting from uint_t to int_t to enable safe comparisons */
 				qpDUNES_printStrArgs( "0.0\t\t\t" );
 			}
 			for( jj=0; jj<(kk > 0 ? 1 : 0)*_NX_; ++jj ) {  /* subdiagonal block */
