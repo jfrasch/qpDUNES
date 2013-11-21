@@ -75,7 +75,7 @@ void qpDUNES_intFree(	int_t** data
  * pointer offsetting
  *
 >>>>>>                                            */
-//inline real_t* offsetArray(	real_t* data,
+/*inline real_t* offsetArray(	real_t* data,*/
 const real_t* offsetArray(	const real_t* const data,
 									int_t offset
 									)
@@ -508,7 +508,7 @@ return_t qpDUNES_transposeMatrix(	matrix_t* const to,
 			break;
 		
 		case QPDUNES_SPARSE	:
-//			qp42_printWarning( __FILE__, __LINE__, "Sparse tranposeMatrix not implemented. Copying densely instead." );
+/*			qp42_printWarning( __FILE__, __LINE__, "Sparse tranposeMatrix not implemented. Copying densely instead." );*/
 			to->sparsityType = QPDUNES_DENSE;
 			for( ii=0; ii < dim1; ++ii ) {	/* go by columns of from matrix */
 				for( jj=0; jj < dim0; ++jj ) {
@@ -644,7 +644,7 @@ int_t qpDUNES_sign(	const qpData_t* const qpData,
 
 
 
-//extern inline void qp42_assertOK(	return_t statusFlag,
+/*extern inline void qp42_assertOK(	return_t statusFlag,*/
 void qpDUNES_assertOK(	return_t statusFlag,
 							char* fileName,
 							int_t lineNumber,
@@ -1016,7 +1016,7 @@ void qpDUNES_printVectorData(	const real_t* const x,
  >>>>>                                            */
 void qpDUNES_printVector( const char* const string )
 {
-//	qp42_printWarning( __FILE__, __LINE__, "qp42_printVector not yet implemented. Doing nothing." );
+/*	qp42_printWarning( __FILE__, __LINE__, "qp42_printVector not yet implemented. Doing nothing." );*/
 	qpDUNES_printf( "qp42_printVector not yet implemented. Doing nothing." );
 }
 /*<<< END OF qp42_printVector */

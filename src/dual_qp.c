@@ -39,13 +39,16 @@
 return_t qpDUNES_solve(qpData_t* const qpData) {
 	uint_t ii, kk;
 
-    real_t tItStart, tItEnd, tQpStart, tQpEnd, tNwtnSetupStart, tNwtnSetupEnd,
+	
+	#ifdef __MEASURE_TIMINGS__
+    real_t 	tItStart, tItEnd, tQpStart, tQpEnd, tNwtnSetupStart, tNwtnSetupEnd,
 			tNwtnFactorStart, tNwtnFactorEnd, tNwtnSolveStart, tNwtnSolveEnd,
 			tLineSearchStart, tLineSearchEnd, tDiff;
+	#endif
     
-   	return_t statusFlag; /* generic status flag */
-    int_t lastActSetChangeIdx = _NI_;
-    real_t objValIncumbent = qpData->options.QPDUNES_INFTY;
+	return_t statusFlag = QPDUNES_OK; /* generic status flag */
+	int_t lastActSetChangeIdx = _NI_;
+	real_t objValIncumbent = qpData->options.QPDUNES_INFTY;
     
 	int_t* itCntr = &(qpData->log.numIter);
 	itLog_t* itLogPtr = &(qpData->log.itLog[0]);
@@ -66,7 +69,7 @@ return_t qpDUNES_solve(qpData_t* const qpData) {
 
 		if (interval->qpSolverSpecification	== QPDUNES_STAGE_QP_SOLVER_CLIPPING) { /* clip solution */
 			/* clip solution: */
-			// TODO: already clip all QPs except for the first one (initial value embedding); but take care for MHE!!!
+			/* TODO: already clip all QPs except for the first one (initial value embedding); but take care for MHE!!!*/
 			statusFlag = directQpSolver_doStep(	qpData,
 												interval,
 												&(interval->qpSolverClipping.dz), 1,
@@ -142,21 +145,31 @@ return_t qpDUNES_solve(qpData_t* const qpData) {
 		itLogPtr->isHessianRegularized = QPDUNES_FALSE;
 		if ((*itCntr > 1) && (*itCntr - 1 <= qpData->options.nbrInitialGradientSteps)) { /* always do one Newton step first */
 			/** (1Aa) get a gradient step */
+			#ifdef __MEASURE_TIMINGS__
 			tNwtnSetupStart = getTime();
+			#endif
 			qpDUNES_computeNewtonGradient(qpData, &(qpData->gradient),
 					&(qpData->xVecTmp));
+			#ifdef __MEASURE_TIMINGS__
 			tNwtnSetupEnd = getTime();
+			#endif
 
 			/** (1Ab) do gradient step */
+			#ifdef __MEASURE_TIMINGS__
 			tNwtnSolveStart = getTime();
+			#endif
 			qpDUNES_copyVector(&(qpData->deltaLambda), &(qpData->gradient),
 					_NI_ * _NX_);
 			statusFlag = QPDUNES_OK;
+			#ifdef __MEASURE_TIMINGS__
 			tNwtnSolveEnd = getTime();
+			#endif
 		}
 		else {
 			/** (1Ba) set up Newton system */
+			#ifdef __MEASURE_TIMINGS__
 			tNwtnSetupStart = getTime();
+			#endif
 			statusFlag = qpDUNES_setupNewtonSystem(qpData);
 			switch (statusFlag) {
 				case QPDUNES_OK:
@@ -183,11 +196,15 @@ return_t qpDUNES_solve(qpData_t* const qpData) {
 					if (qpData->options.logLevel >= QPDUNES_LOG_ITERATIONS)  qpDUNES_logIteration(qpData, itLogPtr, objValIncumbent, lastActSetChangeIdx);
 					return statusFlag;
 			}
+			#ifdef __MEASURE_TIMINGS__
 			tNwtnSetupEnd = getTime();
+			#endif
 
 			/** (1Bb) factorize Newton system */
+			#ifdef __MEASURE_TIMINGS__
 			tNwtnFactorStart = getTime();
-			statusFlag = qpDUNES_factorNewtonSystem(qpData, &(itLogPtr->isHessianRegularized), lastActSetChangeIdx);		// TODO! can we get a problem with on-the-fly regularization in partial refactorization? might only be partially reg.
+			#endif
+			statusFlag = qpDUNES_factorNewtonSystem(qpData, &(itLogPtr->isHessianRegularized), lastActSetChangeIdx);		/* TODO! can we get a problem with on-the-fly regularization in partial refactorization? might only be partially reg.*/
 			switch (statusFlag) {
 				case QPDUNES_OK:
 					break;
@@ -196,10 +213,14 @@ return_t qpDUNES_solve(qpData_t* const qpData) {
 					if (qpData->options.logLevel >= QPDUNES_LOG_ITERATIONS)	 qpDUNES_logIteration(qpData, itLogPtr, objValIncumbent, lastActSetChangeIdx);
 					return statusFlag;
 			}
+			#ifdef __MEASURE_TIMINGS__
 			tNwtnFactorEnd = getTime();
+			#endif
 
 			/** (1Bc) compute step direction */
+			#ifdef __MEASURE_TIMINGS__
 			tNwtnSolveStart = getTime();
+			#endif
 			switch (qpData->options.nwtnHssnFacAlg) {
 			case QPDUNES_NH_FAC_BAND_FORWARD:
 				statusFlag = qpDUNES_solveNewtonEquation(qpData, &(qpData->deltaLambda), &(qpData->cholHessian), &(qpData->gradient));
@@ -213,7 +234,9 @@ return_t qpDUNES_solve(qpData_t* const qpData) {
 				qpDUNES_printError(qpData, __FILE__, __LINE__, "Unknown Newton Hessian factorization algorithm. Cannot do backsolve.");
 				return QPDUNES_ERR_INVALID_ARGUMENT;
 			}
+			#ifdef __MEASURE_TIMINGS__
 			tNwtnSolveEnd = getTime();
+			#endif
 			if (statusFlag != QPDUNES_OK) {
 				qpDUNES_printError(qpData, __FILE__, __LINE__,	"Could not compute Newton step direction.");
 				if (qpData->options.logLevel >= QPDUNES_LOG_ITERATIONS)	 qpDUNES_logIteration(qpData, itLogPtr, objValIncumbent, lastActSetChangeIdx);
@@ -492,9 +515,9 @@ return_t qpDUNES_solveAllLocalQPs(	qpData_t* const qpData,
 	qpDUNES_updateAllLocalQPs(qpData, lambda);
 
 	/* 2) solve local QPs */
-	// TODO: check what happens in case of errors (return)
-	// Note: const variables are predetermined shared (at least on apple)
-	#pragma omp parallel for private(kk) shared(statusFlag) schedule(static) //shared(qpData)    // todo: manage threads outside!
+	/* TODO: check what happens in case of errors (return)*/
+	/* Note: const variables are predetermined shared (at least on apple)*/
+	#pragma omp parallel for private(kk) shared(statusFlag) schedule(static) /*shared(qpData)*/  /* TODO: manage threads outside!*/
 		for (kk = 0; kk < _NI_ + 1; ++kk) {
 			statusFlag = qpDUNES_solveLocalQP(qpData, qpData->intervals[kk]);
 			if (statusFlag != QPDUNES_OK) { /* note that QPDUNES_OK == 0 */
@@ -502,10 +525,10 @@ return_t qpDUNES_solveAllLocalQPs(	qpData_t* const qpData,
 				errCntr++;
 			}
 			#if defined (__QPDUNES_PARALLEL__)
-			//			qpDUNES_printf("Computed QP %d by thread %d/%d.", kk, omp_get_thread_num(), omp_get_num_threads() );
+			/*			qpDUNES_printf("Computed QP %d by thread %d/%d.", kk, omp_get_thread_num(), omp_get_num_threads() );*/
 			#endif
 		}
-//	} /* END of omp parallel */
+/*	}*/ /* END of omp parallel */
 	if (errCntr > 0) {
 		return QPDUNES_ERR_STAGE_QP_INFEASIBLE;
 	}
@@ -565,6 +588,10 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 									)
 {
 	int_t ii, jj, kk;
+	
+	boolean_t addToRes;
+	
+	zx_matrix_t* ZTCT;
 
 	x_vector_t* xVecTmp = &(qpData->xVecTmp);
 	xx_matrix_t* xxMatTmp = &(qpData->xxMatTmp);
@@ -573,8 +600,8 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 	zx_matrix_t* zxMatTmp = &(qpData->zxMatTmp);
 	zx_matrix_t* zxMatTmp2 = &(qpData->xzMatTmp);
 
-	zz_matrix_t* ZT = &(qpData->zzMatTmp);// TODO: share memory between qpOASES and qpDUNES!!!
-	zz_matrix_t* cholProjHess = &(qpData->zzMatTmp2);// TODO: share memory between qpOASES and qpDUNES!!!
+	zz_matrix_t* ZT = &(qpData->zzMatTmp);/* TODO: share memory between qpOASES and qpDUNES!!!*/
+	zz_matrix_t* cholProjHess = &(qpData->zzMatTmp2);/* TODO: share memory between qpOASES and qpDUNES!!!*/
 	int_t nFree; /* number of active constraints of stage QP */
 
 	interval_t** intervals = qpData->intervals;
@@ -607,7 +634,7 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 				qpOASES_getZT(qpData, intervals[kk + 1]->qpSolverQpoases.qpoasesObject, &nFree,	ZT);
 				qpOASES_getCholZTHZ(qpData, intervals[kk + 1]->qpSolverQpoases.qpoasesObject, cholProjHess);
 				backsolveRT_ZTET(qpData, zxMatTmp2, cholProjHess, ZT, xVecTmp, intervals[kk + 1]->nV, nFree);
-				boolean_t addToRes = QPDUNES_FALSE;
+				addToRes = QPDUNES_FALSE;
 				multiplyMatrixTMatrixDenseDense(xxMatTmp->data, zxMatTmp2->data, zxMatTmp2->data, nFree, _NX_, _NX_, addToRes);
 			}
 			else { /* clipping QP solver */
@@ -617,8 +644,8 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 				/* Annihilate columns in invQ; WARNING: this can really only be applied for diagonal matrices */
 				qpDUNES_makeMatrixDense(xxMatTmp, _NX_, _NX_);
 				for (ii = 0; ii < _NX_; ++ii) {
-					if ((intervals[kk + 1]->y.data[2 * ii] >= qpData->options.equalityTolerance) ||		// check if local constraint lb_x is active
-						(intervals[kk + 1]->y.data[2 * ii + 1] >= qpData->options.equalityTolerance))	// check if local constraint ub_x is active		// WARNING: weakly active constraints are excluded here!
+					if ((intervals[kk + 1]->y.data[2 * ii] >= qpData->options.equalityTolerance) ||		/* check if local constraint lb_x is active*/
+						(intervals[kk + 1]->y.data[2 * ii + 1] >= qpData->options.equalityTolerance))	/* check if local constraint ub_x is active*/	/* WARNING: weakly active constraints are excluded here!*/
 					{
 						xxMatTmp->data[ii * _NX_ + ii] = 0.;
 					}
@@ -632,12 +659,12 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 				qpOASES_getZT(qpData, intervals[kk]->qpSolverQpoases.qpoasesObject,	&nFree, ZT);
 				qpOASES_getCholZTHZ(qpData,	intervals[kk]->qpSolverQpoases.qpoasesObject, cholProjHess);
 				/* computer Z.T * C.T */
-				zx_matrix_t* ZTCT = zxMatTmp;
+				ZTCT = zxMatTmp;
 				multiplyMatrixMatrixTDenseDense(ZTCT->data, ZT->data, intervals[kk]->C.data, nFree, _NZ_, _NX_);
 				/* compute "squareroot" of C_{k} P_{k} C_{k}' */
 				backsolveRT_ZTCT(qpData, zxMatTmp2, cholProjHess, ZTCT, xVecTmp, intervals[kk]->nV, nFree);
 				/* compute C_{k} P_{k} C_{k}' contribution */
-				boolean_t addToRes = QPDUNES_TRUE;
+				addToRes = QPDUNES_TRUE;
 				multiplyMatrixTMatrixDenseDense(xxMatTmp->data, zxMatTmp2->data, zxMatTmp2->data, nFree, _NX_, _NX_, addToRes);
 			}
 			else { /* clipping QP solver */
@@ -677,7 +704,7 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 				backsolveRT_ZTET(qpData, zxMatTmp, cholProjHess, ZT, xVecTmp, intervals[kk]->nV, nFree);
 
 				/* compute C_{k} P_{k} E_{k}' contribution */
-				boolean_t addToRes = QPDUNES_FALSE;
+				addToRes = QPDUNES_FALSE;
 				multiplyMatrixTMatrixDenseDense(xxMatTmp->data, zxMatTmp2->data, zxMatTmp->data, nFree, _NX_, _NX_, addToRes);
 
 				/* write Hessian part */
@@ -694,8 +721,8 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 				for (ii=0; ii<_NX_; ++ii) {
 					for (jj=0; jj<_NX_; ++jj) {
 						/* cheap way of annihilating columns; TODO: make already in multiplication routine! */
-						if ( ( intervals[kk]->y.data[2*jj] <= qpData->options.equalityTolerance ) &&		// check if local constraint lb_x is inactive
-							 ( intervals[kk]->y.data[2*jj+1] <= qpData->options.equalityTolerance ) )		// check if local constraint ub_x is inactive
+						if ( ( intervals[kk]->y.data[2*jj] <= qpData->options.equalityTolerance ) &&		/* check if local constraint lb_x is inactive*/
+							 ( intervals[kk]->y.data[2*jj+1] <= qpData->options.equalityTolerance ) )		/* check if local constraint ub_x is inactive*/
 						{
 							accHessian( kk, -1, ii, jj ) = - xxMatTmp->data[ii * _NX_ + jj];
 						}
@@ -709,7 +736,7 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 		}
 	}	/* END OF sub-diagonal block for loop */
 
-//	qpDUNES_printMatrixData( qpData->hessian.data, _NI_*_NX_, 2*_NX_, "H = ");
+/*	qpDUNES_printMatrixData( qpData->hessian.data, _NI_*_NX_, 2*_NX_, "H = ");*/
 
 	return QPDUNES_OK;
 }
@@ -780,8 +807,8 @@ return_t qpDUNES_factorNewtonSystem( qpData_t* const qpData,
 	if (statusFlag == QPDUNES_OK) {
 		for (kk = 0; kk < _NI_; ++kk) {
 			for (ii = 0; ii < _NX_; ++ii) {
-//				if (minDiagElem > fabs(accCholHessian(kk, 0, ii, ii)) ) {
-//					minDiagElem = fabs( accCholHessian(kk, 0, ii, ii) );
+/*				if (minDiagElem > fabs(accCholHessian(kk, 0, ii, ii)) ) {
+					minDiagElem = fabs( accCholHessian(kk, 0, ii, ii) );*/
 				if (minDiagElem > accCholHessian(kk, 0, ii, ii) ) {
 					minDiagElem = accCholHessian(kk, 0, ii, ii);
 				}
@@ -873,10 +900,10 @@ return_t qpDUNES_factorizeNewtonHessian( qpData_t* const qpData,
 	int_t jj, ii, kk, ll;
 	real_t sum;
 
-	// TMEPORARY
+	/* TEMPORARY*/
 	real_t colMax;
 	real_t colSum;
-	// END TEMPORARY
+	/* END TEMPORARY*/
 
 	/* go by block columns */
 	for (kk = 0; kk < _NI_; ++kk) {
@@ -909,7 +936,7 @@ return_t qpDUNES_factorizeNewtonHessian( qpData_t* const qpData,
 					qpDUNES_printf( "Regularized NH[k=%d,j=%d] = %.2e + %.2e", kk, jj, sum, qpData->options.regParam );
 				}
 				#endif
-//				sum += qpData->options.regParam;
+/*				sum += qpData->options.regParam;*/
 				sum += qpData->options.QPDUNES_INFTY * qpData->options.QPDUNES_INFTY + 1.;
 				*isHessianRegularized = QPDUNES_TRUE;
 			}
@@ -920,12 +947,12 @@ return_t qpDUNES_factorizeNewtonHessian( qpData_t* const qpData,
 			}
 			accCholHessian(kk,0,jj,jj) = sqrt( sum );
 			
-			// TEMPORARY
+			/* TEMPORARY*/
 			colMax = 0.;
 			colSum = 0.;
-			// END TEMPORARY
+			/* END TEMPORARY*/
 
-			/* 3) write remainder of jj-th column: */		// TODO: think about how we can avoid this column-wise access and postpone until the respective element is needed */
+			/* 3) write remainder of jj-th column: */		/* TODO: think about how we can avoid this column-wise access and postpone until the respective element is needed */
 			/*  - this diagonal block */
 			for( ii=(jj+1); ii<_NX_; ++ii )
 			{
@@ -943,10 +970,10 @@ return_t qpDUNES_factorizeNewtonHessian( qpData_t* const qpData,
 					}
 				}
 				
-				// TEMPORARY
+				/* TEMPORARY */
 				if (colMax<fabs(sum)) colMax =fabs(sum);
 				colSum += fabs(accHessian(kk,0,ii,jj));
-				// END TEMPORARY
+				/* END TEMPORARY */
 
 				accCholHessian(kk,0,ii,jj) = sum / accCholHessian(kk,0,jj,jj);
 			}
@@ -961,10 +988,10 @@ return_t qpDUNES_factorizeNewtonHessian( qpData_t* const qpData,
 						sum -= accCholHessian(kk+1,-1,ii,ll) * accCholHessian(kk,0,jj,ll);
 					}
 					
-					// TEMPORARY
+					/* TEMPORARY */
 					if (colMax<fabs(sum)) colMax =fabs(sum);
 					colSum += fabs(accHessian(kk+1,-1,ii,jj));
-					// END TEMPORARY
+					/* END TEMPORARY */
 
 					accCholHessian(kk+1,-1,ii,jj) = sum / accCholHessian(kk,0,jj,jj);
 				}
@@ -972,7 +999,7 @@ return_t qpDUNES_factorizeNewtonHessian( qpData_t* const qpData,
 		} /* next column */
 		} /* next block column */
 
-//	qpDUNES_factorizeNewtonHessianBottomUp( qpData, cholHessian, hessian, isHessianRegularized );
+/*	qpDUNES_factorizeNewtonHessianBottomUp( qpData, cholHessian, hessian, isHessianRegularized );*/
 
 	return QPDUNES_OK;
 }
@@ -993,7 +1020,7 @@ return_t qpDUNES_factorizeNewtonHessianBottomUp( qpData_t* const qpData,
 	real_t sum;
 
 	int_t blockIdxStart = (lastActSetChangeIdx>=0)  ?  qpDUNES_min(lastActSetChangeIdx, _NI_-1)  :  -1;
-//	int_t blockIdxStart = _NI_-1;
+/*	int_t blockIdxStart = _NI_-1; */
 
 	#ifdef __DEBUG__
 	if (qpData->options.printLevel >= 3) {
@@ -1127,7 +1154,7 @@ return_t qpDUNES_solveNewtonEquation(	qpData_t* const qpData,
 				return QPDUNES_ERR_DIVISION_BY_ZERO;
 			}
 			#endif
-			// temporarily to try Wright1999
+			/* temporarily to try Wright1999 */
 			if (accCholHessian(kk,0,ii,ii)> qpData->options.QPDUNES_INFTY) {
 				res->data[kk*_NX_+ii] = 0.;
 			}
@@ -1194,7 +1221,7 @@ return_t qpDUNES_solveNewtonEquationBottomUp(	qpData_t* const qpData,
 			}
 			if (kk < _NI_ - 1) { /* ... of corresponding superdiagonal block, access via following row's subdiagonal block (if not first block row from bottom) */
 				for (jj = 0; jj < _NX_; ++jj) {
-					sum -= accCholHessian(kk+1,-1,jj,ii)* res->data[(kk+1)*_NX_+jj];// TODO: maybe change access pattern, start with superdiag block, so cholH access is more continuous
+					sum -= accCholHessian(kk+1,-1,jj,ii)* res->data[(kk+1)*_NX_+jj];/* TODO: maybe change access pattern, start with superdiag block, so cholH access is more continuous*/
 				}
 			}
 
@@ -1311,7 +1338,11 @@ return_t qpDUNES_determineStepLength(	qpData_t* const qpData,
 									)
 {
 	return_t statusFlag;
+	
+	int_t kk;
 
+	interval_t* interval;
+	
 	int_t nV = _NX_ * _NI_;
 
 	real_t alphaMin = 0.;
@@ -1321,9 +1352,6 @@ return_t qpDUNES_determineStepLength(	qpData_t* const qpData,
 	xn_vector_t* lambdaTry = &(qpData->xnVecTmp);
 
 	*itCntr = 0;
-
-	int_t kk;
-	interval_t* interval;
 
 	/* compute minimum step size for active set change */
 	/* WARNING: THIS ONLY WORKS IF ALL INTERVALS ARE OF THE SAME TYPE */
@@ -1534,19 +1562,21 @@ return_t qpDUNES_backTrackingLineSearch(	qpData_t* const qpData,
  *
  >>>>>>                                           */
 return_t qpDUNES_reductionLineSearchWithASChange(	qpData_t* const qpData,
-												real_t* const alpha,
-												uint_t* const itCntr,
-												xn_vector_t* const lambda,
-												const xn_vector_t* const deltaLambdaFS,
-												xn_vector_t* const lambdaTry,
-		int_t nV, real_t alphaMin, real_t alphaMax,
-		real_t const objValIncumbent) {
-	assert(1 == 0);
-	printf("qpDUNES_reductionLineSearchWithASChange not fixed yet!");
+													real_t* const alpha,
+													uint_t* const itCntr,
+													xn_vector_t* const lambda,
+													const xn_vector_t* const deltaLambdaFS,
+													xn_vector_t* const lambdaTry,
+													int_t nV, real_t alphaMin, real_t alphaMax,
+													real_t const objValIncumbent)
+{
 	real_t minimumProgress;
 	real_t objVal;
 
 	int_t nChgdConstr;
+
+	assert(1 == 0);
+	printf("qpDUNES_reductionLineSearchWithASChange not fixed yet!");
 
 	minimumProgress = qpData->options.lineSearchMinRelProgress
 			* fabs(objValIncumbent) + qpData->options.lineSearchMinAbsProgress;
@@ -1598,14 +1628,14 @@ return_t qpDUNES_goldenSectionIntervalSearch(	qpData_t* const qpData,
 											real_t alphaMin,
 											real_t alphaMax	)
 {
-	assert(1 == 0);
-	printf("qpDUNES_goldenSectionIntervalSearch not fixed yet!");
-
 	real_t objValLL, objValL, objValR, objValRR;
 	real_t aLL, aL, aR, aRR;
 	real_t alphaCheckedLast;
 
 	real_t goldSec = 0.6180339887; /**< golden section ratio for interval line search (sqrt(5)-1)/2 */
+	
+	assert(1 == 0);
+	printf("qpDUNES_goldenSectionIntervalSearch not fixed yet!");
 
 	aLL = alphaMin;
 	addVectorScaledVector(lambdaTry, lambda, aLL, deltaLambdaFS, nV);
@@ -1710,7 +1740,12 @@ return_t qpDUNES_bisectionIntervalSearch(	qpData_t* const qpData,
 										real_t alphaMax
 										)
 {
-	real_t alphaC;
+	int_t kk, ii;
+	interval_t* interval;
+
+	z_vector_t* zTry;
+	
+	real_t alphaC = 1.0;
 
 	real_t alphaSlope;
 	real_t slopeNormalization = fmin( 1., vectorNorm((vector_t*)deltaLambdaFS,nV) ); 	/* demand more stationarity for smaller steps */
@@ -1720,16 +1755,13 @@ return_t qpDUNES_bisectionIntervalSearch(	qpData_t* const qpData,
 	xn_vector_t* gradientTry = &(qpData->xnVecTmp2);
 	/* todo: no need to recompute gradient in next Newton iteration! */
 
-	int_t kk, ii;
-	interval_t* interval;
-
 	/* TODO: take line search iterations and maxNumLineSearchRefinementIterations together! */
 	/** (1) check if full step is stationary or even still ascent direction */
 	for ( /*continuous itCntr*/; (*itCntr) < qpData->options.maxNumLineSearchRefinementIterations; ++(*itCntr)) {
 		/* update z locally according to alpha guess */
 		for (kk = 0; kk < _NI_ + 1; ++kk) {
 			interval = qpData->intervals[kk];
-			z_vector_t* zTry = &(interval->zVecTmp);
+			zTry = &(interval->zVecTmp);
 			/* get primal variables for trial step length */
 			addVectorScaledVector(zTry,	&(interval->qpSolverClipping.zUnconstrained), alphaMax,	&(interval->qpSolverClipping.dz), interval->nV);
 			directQpSolver_saturateVector(qpData, zTry, &(interval->y), &(interval->zLow), &(interval->zUpp), interval->nV);
@@ -1788,7 +1820,7 @@ return_t qpDUNES_bisectionIntervalSearch(	qpData_t* const qpData,
 		/* update z locally according to alpha guess */
 		for (kk = 0; kk < _NI_ + 1; ++kk) {
 			interval = qpData->intervals[kk];
-			z_vector_t* zTry = &(interval->zVecTmp);
+			zTry = &(interval->zVecTmp);
 			/* get primal variables for trial step length */
 			addVectorScaledVector( zTry, &(interval->qpSolverClipping.zUnconstrained), alphaC, &(interval->qpSolverClipping.dz), interval->nV );
 			directQpSolver_saturateVector( qpData, zTry, &(interval->y), &(interval->zLow), &(interval->zUpp), interval->nV );
@@ -1903,7 +1935,7 @@ void qpDUNES_getPrimalSol(const qpData_t* const qpData, real_t* const z) {
 void qpDUNES_getDualSol(const qpData_t* const qpData, real_t* const lambda,
 		real_t* const y) {
 
-	qpDUNES_printWarning( qpData, __FILE__, __LINE__, "getDualSol currently not working" );	// TODO: fix getDualSol
+	qpDUNES_printWarning( qpData, __FILE__, __LINE__, "getDualSol currently not working" );	/* TODO: fix getDualSol */
 
 	return;
 }
@@ -1951,6 +1983,9 @@ real_t qpDUNES_computeParametricObjectiveValue(	qpData_t* const qpData,
 												)
 {
 	int_t kk;
+	
+	z_vector_t* qTry;
+	real_t pTry;
 
 	real_t objVal = 0.;
 
@@ -1959,8 +1994,7 @@ real_t qpDUNES_computeParametricObjectiveValue(	qpData_t* const qpData,
 	/* TODO: move to own function in direct QP solver, a la getObjVal( qpData, interval, alpha ) */
 	for (kk = 0; kk < _NI_ + 1; ++kk) {
 		interval = qpData->intervals[kk];
-		z_vector_t* qTry = &(interval->zVecTmp);
-		real_t pTry;
+		qTry = &(interval->zVecTmp);
 
 		/* get primal variables for trial step length */
 		switch (interval->qpSolverSpecification) {
@@ -2005,7 +2039,7 @@ uint_t qpDUNES_getActSet( const qpData_t* const qpData,
 
 	uint_t nActConstr = 0;
 
-	// temporary hack to make sure newton hessian is refactorized even with qpOASES:
+	/* temporary hack to make sure newton hessian is refactorized even with qpOASES: */
 	static int counter = 0;
 
 	#ifdef __DEBUG__
@@ -2041,9 +2075,9 @@ uint_t qpDUNES_getActSet( const qpData_t* const qpData,
 			}
 		}
 		else {	/* qpOASES */
-			qpDUNES_printError(qpData, __FILE__, __LINE__,	"getActSet currently not working with general constraints (qpOASES)");// TODO: fix getActSet
+			qpDUNES_printError(qpData, __FILE__, __LINE__,	"getActSet currently not working with general constraints (qpOASES)");/* TODO: fix getActSet */
 
-			// TODO : THIS IS A TEMPORARY HACK to make sure hessian is refactorized even with qpOASES...
+			/* TODO : THIS IS A TEMPORARY HACK to make sure hessian is refactorized even with qpOASES...*/
 			for (ii = 0; ii < _ND(kk) + _NV(kk); ++ii ) {
 				/* TODO: make this quick hack clean for general multiplier usage...! */
 				counter ++;

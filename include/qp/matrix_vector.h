@@ -546,10 +546,10 @@ return_t addCInvHCT(	qpData_t* const qpData,
 						xx_matrix_t* const res,
 						const vv_matrix_t* const cholH,
 						const xz_matrix_t* const C,
-//						const xx_matrix_t* const A,
-//						const xu_matrix_t* const B,
+/*						const xx_matrix_t* const A,*/
+/*						const xu_matrix_t* const B,*/
 						const d2_vector_t* const y,
-//						xz_matrix_t* const C,			/**< temporary matrix to build up C as once */
+/*						xz_matrix_t* const C,*/			/**< temporary matrix to build up C as once */
 						xx_matrix_t* const xxMatTmp,
 						ux_matrix_t* const uxMatTmp,
 						zx_matrix_t* const zxMatTmp

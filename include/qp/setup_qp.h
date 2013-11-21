@@ -200,7 +200,7 @@ return_t qpDUNES_shiftLambda(	qpData_t* const qpData
 							);
 
 
-qpOptions_t qpDUNES_setupDefaultOptions(	//qpData_t* const qpData
+qpOptions_t qpDUNES_setupDefaultOptions(	/*qpData_t* const qpData*/
 										);
 
 return_t qpDUNES_setupLog(	qpData_t* const qpData

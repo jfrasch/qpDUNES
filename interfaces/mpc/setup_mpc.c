@@ -144,22 +144,25 @@ return_t mpcDUNES_initLtiSb_xu(	mpcProblem_t* const mpcProblem,
 							)
 {
 	int_t ii,jj,kk;
-	
 	return_t statusFlag;
+	
+	qpData_t* qpData;
+
+	int_t nI, nZ, nX, nU;
+
+	real_t* cMod    = mpcProblem->xnTmp;	/* temporary variables for bound setup from workspace */
+	real_t* zLowMod = mpcProblem->zn1Tmp;
+	real_t* zUppMod = mpcProblem->zn1Tmp2;
 
 	mpcProblem->isLTI = QPDUNES_TRUE;
 
+	qpData = &(mpcProblem->qpData);
+	nI = qpData->nI;
+	nZ = qpData->nZ;
+	nX = qpData->nX;
+	nU = qpData->nU;
 
-	qpData_t* qpData = &(mpcProblem->qpData);
-	int_t nI = qpData->nI;
-	int_t nZ = qpData->nZ;
-	int_t nX = qpData->nX;
-	int_t nU = qpData->nU;
-	
-	real_t* cMod = mpcProblem->xnTmp;	/* temporary variables for bound setup from workspace */
-	real_t* zLowMod = mpcProblem->zn1Tmp;
-	real_t* zUppMod = mpcProblem->zn1Tmp2;
-	
+
 	/** check existence of data */
 	if ( !Q ) {
 		qpDUNES_printError( qpData, __FILE__, __LINE__, "Q matrix missing" );
@@ -349,20 +352,22 @@ return_t mpcDUNES_initLtiSb(	mpcProblem_t* const mpcProblem,
 							)
 {
 	int_t ii,jj,kk;
-
 	return_t statusFlag;
+	
+	int_t nI, nZ, nX;
+
+	qpData_t* qpData;
+
+	real_t* cMod    = mpcProblem->xnTmp;	/* temporary variables for bound setup from workspace */
+	real_t* zLowMod = mpcProblem->zn1Tmp;
+	real_t* zUppMod = mpcProblem->zn1Tmp2;
 
 	mpcProblem->isLTI = QPDUNES_TRUE;
 
-
-	qpData_t* qpData = &(mpcProblem->qpData);
-	int_t nI = qpData->nI;
-	int_t nZ = qpData->nZ;
-	int_t nX = qpData->nX;
-
-	real_t* cMod = mpcProblem->xnTmp;	/* temporary variables for bound setup from workspace */
-	real_t* zLowMod = mpcProblem->zn1Tmp;
-	real_t* zUppMod = mpcProblem->zn1Tmp2;
+	qpData = &(mpcProblem->qpData);
+	nI = qpData->nI;
+	nZ = qpData->nZ;
+	nX = qpData->nX;
 
 	/** check existence of data */
 	if ( !H_ ) {
@@ -494,17 +499,21 @@ return_t mpcDUNES_initLtvSb(	mpcProblem_t* const mpcProblem,
 {
 	int_t kk, ii, jj;
 
-//	static const boolean_t isLTI = QPDUNES_FALSE;
-	mpcProblem->isLTI = QPDUNES_FALSE;
+	int_t nI, nZ, nX;
 
-	qpData_t* qpData = &(mpcProblem->qpData);
-	int_t nI = qpData->nI;
-	int_t nZ = qpData->nZ;
-	int_t nX = qpData->nX;
-
+	qpData_t* qpData;
+	
 	real_t* cMod = mpcProblem->xnTmp;	/* temporary variables for bound setup from workspace */
 	real_t* zLowMod = mpcProblem->zn1Tmp;
 	real_t* zUppMod = mpcProblem->zn1Tmp2;
+
+/*	static const boolean_t isLTI = QPDUNES_FALSE;*/
+	mpcProblem->isLTI = QPDUNES_FALSE;
+
+	qpData = &(mpcProblem->qpData);
+	nI = qpData->nI;
+	nZ = qpData->nZ;
+	nX = qpData->nX;
 
 	/** (1) check existence of data */
 	if ( !H_ ) {

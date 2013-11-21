@@ -616,7 +616,7 @@ return_t qpDUNES_setupRegularInterval(	qpData_t* const qpData,
 {
 	int_t ii, jj;
 	
-	int_t nD = interval->nD;	// TODO: enable ND static for full static memory!
+	int_t nD = interval->nD;	/* TODO: enable ND static for full static memory!*/
 	int_t nV = interval->nV;
 
 	vv_matrix_t* H = &(interval->H);
@@ -1074,7 +1074,7 @@ return_t qpDUNES_setupStageQP(	qpData_t* const qpData,
 		/*     - solve */
 		statusFlag = directQpSolver_solveUnconstrained( qpData, interval, &(interval->qpSolverClipping.qStep) );
 		if ( statusFlag != QPDUNES_OK ) {
-			int kk = 1234567890;	// todo: get right interval number!
+			int kk = 1234567890;	/* TODO: get right interval number!*/
 			qpDUNES_printError( qpData, __FILE__, __LINE__, "QP on interval %d infeasible!", kk );
 			if (qpData->options.logLevel >= QPDUNES_LOG_ITERATIONS )	qpDUNES_logIteration( qpData, &(qpData->log.itLog[0]), qpData->options.QPDUNES_INFTY, _NI_ );
 			return statusFlag;
@@ -1101,7 +1101,7 @@ return_t qpDUNES_setupStageQP(	qpData_t* const qpData,
 
 		/* (c) initialize qpOASES and run initial homotopy (i.e., solve first QP) */
 		statusFlag = qpOASES_setup( qpData, interval->qpSolverQpoases.qpoasesObject, interval,
-									&(interval->H), &(interval->qpSolverQpoases.qFullStep), //&(interval->g),
+									&(interval->H), &(interval->qpSolverQpoases.qFullStep), /*&(interval->g),*/
 									&(interval->zLow), &(interval->zUpp),
 									&(interval->D), &(interval->dLow), &(interval->dUpp));
 	}

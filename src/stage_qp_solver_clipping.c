@@ -83,7 +83,7 @@ return_t clippingQpSolver_updateStageData(	qpData_t* const qpData,
  * solve unconstrained QP
  *
 #>>>>>>                                           */
-// TODO: rename to clippingQpSolver
+/* TODO: rename to clippingQpSolver*/
 return_t directQpSolver_solveUnconstrained( qpData_t* const qpData,
 												 interval_t* const interval,
 												 const z_vector_t* const qStep )

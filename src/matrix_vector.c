@@ -152,8 +152,8 @@ return_t multiplyBu(	qpData_t* const qpData,
 return_t multiplyCz(	qpData_t* const qpData,
 						x_vector_t* const res,
 						const xz_matrix_t* const C,
-//						const xx_matrix_t* const A,
-//						const xu_matrix_t* const B,
+/*						const xx_matrix_t* const A,*/
+/*						const xu_matrix_t* const B,*/
 						const z_vector_t* const z 	)
 {
 	/** only dense multiplication */
@@ -178,8 +178,8 @@ return_t multiplyCz(	qpData_t* const qpData,
 return_t multiplyCTy(	qpData_t* const qpData,
 						z_vector_t* const res,
 						const xz_matrix_t* const C,
-//						const xx_matrix_t* const A,
-//						const xu_matrix_t* const B,
+/*						const xx_matrix_t* const A,*/
+/*						const xu_matrix_t* const B,*/
 						const x_vector_t* const y 	)
 {
 	/** only dense multiplication */
@@ -2088,7 +2088,7 @@ return_t addMultiplyMatrixInvMatrixMatrixT(	qpData_t* const qpData,
 	int_t ii, jj, ll;
 
 	/* always assuming M2 is dense */
-//	assert( M2->sparsityType == QPDUNES_DENSE );
+/*	assert( M2->sparsityType == QPDUNES_DENSE );*/
 	/* compute M1^-1/2 * M2.T */
 	switch (cholM1->sparsityType) {
 	case QPDUNES_DENSE:

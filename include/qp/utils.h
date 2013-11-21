@@ -88,7 +88,7 @@ void qpDUNES_intFree(	int_t** data
  *	\version 1.0beta
  *	\date 2012
  */
-//inline real_t* offsetArray(	real_t* data,
+/*inline real_t* offsetArray(	real_t* data,*/
 const real_t* offsetArray(	const real_t* const data,
 							int_t offset
 							);
@@ -105,11 +105,11 @@ const real_t* offsetArray(	const real_t* const data,
  *	\version 1.0beta
  *	\date 2012
  */
-//return_t qp42_setupMatrix(	matrix_t* const to,
-//							const real_t* const from,
-//							int_t nRows,
-//							int_t nCols
-//							);
+/*return_t qp42_setupMatrix(	matrix_t* const to,
+							const real_t* const from,
+							int_t nRows,
+							int_t nCols
+							);*/
 sparsityType_t qpDUNES_detectMatrixSparsity(	const real_t* const M,
 											int_t nRows,
 											int_t nCols
@@ -328,10 +328,10 @@ return_t qpDUNES_copyVector(	vector_t* const to,
  *	\version 1.0beta
  *	\date 2012
  */
-//return_t qp42_copyIntVector(	intVector_t* const to,
-//								const intVector_t* const from,
-//								int_t n
-//								);
+/*return_t qp42_copyIntVector(	intVector_t* const to,
+								const intVector_t* const from,
+								int_t n
+								);*/
 
 
 /**
@@ -394,8 +394,8 @@ return_t qpDUNES_copyArray(	real_t* const to,
  *	\date 2012
  */
 /* return_t getLambdaOffset(	xn_vector_t* lambda,
-// 							int_t idx
-// 							);*/
+ 							int_t idx
+ 							);*/
 
 
 
@@ -459,9 +459,9 @@ void qpDUNES_assertOK(	return_t statusFlag,
  *	\version 1.0beta
  *	\date 2012
  */
-//void qp42_getResults( 	qpData_t qpData,
-//						qpResults_t results
-//					 );
+/*void qp42_getResults( 	qpData_t qpData,
+						qpResults_t results
+						);*/
 
 
 
