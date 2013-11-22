@@ -1748,7 +1748,7 @@ return_t qpDUNES_bisectionIntervalSearch(	qpData_t* const qpData,
 	real_t alphaC = 1.0;
 
 	real_t alphaSlope;
-	real_t slopeNormalization = fmin( 1., vectorNorm((vector_t*)deltaLambdaFS,nV) ); 	/* demand more stationarity for smaller steps */
+	real_t slopeNormalization = qpDUNES_fmin( 1., vectorNorm((vector_t*)deltaLambdaFS,nV) ); 	/* demand more stationarity for smaller steps */
 
 
 	/* todo: get memory passed on from determine step length */
