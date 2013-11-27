@@ -24,6 +24,10 @@
 %
 %  A simple double integrator model for a badminton robot
 %
+%  execute
+%     cd ../../interfaces/matlab/; make; cd ../../examples/matlab
+%  to compile mex
+%
 
 
 %% Problem definition
