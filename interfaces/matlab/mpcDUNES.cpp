@@ -542,7 +542,7 @@ void updateZStyle( mpcProblem_t* mpcProblem, int nrhs, const mxArray* const prhs
 	}
 	if ( C_F != 0 ) {	/* C given */
 		if ( !mpcProblem->isLTI ) {
-			if ( mxGetM( Cptr ) != nZ )	mexErrMsgTxt( "ERROR (qpDUNES): Detected C, but inconsistent row number." );
+			if ( mxGetM( Cptr ) != nX )	mexErrMsgTxt( "ERROR (qpDUNES): Detected C, but inconsistent row number." );
 			if ( mxGetN( Cptr ) != nI*nZ )	mexErrMsgTxt( "ERROR (qpDUNES): Detected C, but inconsistent column number for LTV system (set up originally)." );
 		}
 		else {
