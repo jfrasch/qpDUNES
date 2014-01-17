@@ -66,7 +66,8 @@ QPDUNES_OBJECTS =	[	QPDUNESPATH, 'src/stage_qp_solver_clipping.c ',...
 DEBUGFLAGS = ' ';
 % DEBUGFLAGS = ' -g -D__DEBUG__ -v CXXDEBUGFLAGS=''$CXXDEBUGFLAGS -D__DEBUG__ -Wall -pedantic -Wshadow'' ';
 
-MEXOBJS = { 'mpcDUNES' 
+MEXOBJS = { 'qpDUNES', ...
+			'mpcDUNES' 
 			}
 
 ;

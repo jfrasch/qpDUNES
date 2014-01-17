@@ -34,6 +34,7 @@
  */
 
 extern "C" {
+	#include <setup_mpc.h>
 	#include <qpDUNES.h>
 }
 
@@ -45,14 +46,14 @@ extern "C" {
 
 
 /*
- *	a l l o c a t e O u t p u t s
+ *	a l l o c a t e O u t p u t s M P C
  */
-void allocateOutputs(	mxArray* plhs[],
-					  	int nlhs,
-					  	int nI,
-					  	int nX,
-					  	int nU
-						)
+void allocateOutputsMPC (	mxArray* plhs[],
+					  		int nlhs,
+					  		int nI,
+					  		int nX,
+					  		int nU
+							)
 {
 	/* Create output vectors and assign pointers to them. */
 	plhs[0] = mxCreateDoubleMatrix( nU*nI, 1, mxREAL );	/* uOpt */
@@ -75,12 +76,12 @@ void allocateOutputs(	mxArray* plhs[],
 
 
 /*
- *	o b t a i n O u t p u t s
+ *	o b t a i n O u t p u t s M P C
  */
-void obtainOutputs( const mpcProblem_t* const mpcProblem,
-					mxArray* const plhs[],
-					int nlhs
-					)
+void obtainOutputsMPC ( 	const mpcProblem_t* const mpcProblem,
+							mxArray* const plhs[],
+							int nlhs
+							)
 {
 	const qpData_t* qpData = &(mpcProblem->qpData);
 	int nI = qpData->nI;
@@ -117,75 +118,90 @@ void obtainOutputs( const mpcProblem_t* const mpcProblem,
 
 
 /*
- *	d o u b l e T o B o o l e a n
+ *	a l l o c a t e O u t p u t s Q P
  */
-boolean_t doubleToBoolean( double from )
+void allocateOutputsQP(	mxArray* plhs[],
+					  	int nlhs,
+					  	int nI,
+					  	int nX,
+					  	int nZ
+						)
 {
-    if ( fabs( from ) < 1e-12 )
-        return QPDUNES_FALSE;
-    else
-        return QPDUNES_TRUE;
+	/* Create output vectors and assign pointers to them. */
+	plhs[0] = mxCreateDoubleMatrix( nZ*nI+nX, 1, mxREAL );	/* zOpt */
+
+	if ( nlhs >= 2 )
+	{
+		plhs[1] = mxCreateDoubleMatrix( 1, 1, mxREAL );	/* status */
+
+		if ( nlhs >= 3 )
+		{
+			plhs[2] = mxCreateDoubleMatrix( nX*nI, 1, mxREAL );	/* lambdaOpt */
+
+			if ( nlhs >= 4 )
+			{
+				plhs[3] = mxCreateDoubleMatrix( 0, 0, mxREAL );	/* muOpt */
+
+				if ( nlhs >= 5 )
+				{
+					plhs[4] = mxCreateDoubleMatrix( 1, 1, mxREAL );	/* objVal */
+				}
+			}
+		}
+	}
 }
 
 
 /*
- *	d o u b l e T o L o g L e v e l
+ *	o b t a i n O u t p u t s Q P
  */
-logLevel_t doubleToLogLevel( double from )
+void obtainOutputsQP( 	qpData_t* const qpData,
+						mxArray* const plhs[],
+						int nlhs,
+						return_t solverStatus
+						)
 {
-    if ( fabs( from ) < 1e-12 )
-        return QPDUNES_LOG_OFF;
-    else if ( fabs( from - 1.0 ) < 1e-12 )
-        return QPDUNES_LOG_ITERATIONS;
-    else if ( fabs( from - 2.0 ) < 1e-12 )
-        return QPDUNES_LOG_ALL_DATA;
-    
-    return QPDUNES_LOG_OFF;
+	int kk;
+	int nI = qpData->nI;
+	int nX = qpData->nX;
+	int nZ = qpData->nZ;
+
+
+	/* zOpt (primal solution) */
+	double* zOpt = mxGetPr( plhs[0] );
+	for ( kk=0; kk<nI+1; ++kk ) { /* regular intervals */
+		qpDUNES_copyArray( &(zOpt[kk*nZ]), qpData->intervals[kk]->z.data, qpData->intervals[kk]->nV );
+	}
+
+	if ( nlhs >= 2 )
+	{
+		/* status */
+		double* status = mxGetPr( plhs[1] );
+		*status = solverStatus;
+
+		if ( nlhs >= 3 )
+		{
+			/* lambda (dual equality constraints) */
+			double* lambdaOpt = mxGetPr( plhs[2] );
+			qpDUNES_copyArray( lambdaOpt, qpData->lambda.data, nI*nX );
+
+			if ( nlhs >= 4 )
+			{
+				/* mu (dual inequality constraints) */
+				/* TODO: compute mu  */
+				/* double* muOpt = mxGetPr( plhs[3] ); */
+
+				if ( nlhs >= 5 )
+				{
+					/* objVal */
+					double* objVal = mxGetPr( plhs[4] );
+					*objVal = qpDUNES_computeObjectiveValue( qpData );
+				}
+			}
+		}
+	}
 }
 
-
-/*
- *	d o u b l e T o H s s n R e g T y p e
- */
-nwtnHssnRegType_t doubleToHssnRegType( double from )
-{
-    if ( fabs( from ) < 1e-12 )
-        return QPDUNES_REG_LEVENBERG_MARQUARDT;
-    else if ( fabs( from - 1.0 ) < 1e-12 )
-        return QPDUNES_REG_NORMALIZED_LEVENBERG_MARQUARDT;
-    else if ( fabs( from - 2.0 ) < 1e-12 )
-        return QPDUNES_REG_SINGULAR_DIRECTIONS;
-    else if ( fabs( from - 3.0 ) < 1e-12 )
-        return QPDUNES_REG_UNCONSTRAINED_HESSIAN;
-    else if ( fabs( from - 4.0 ) < 1e-12 )
-        return QPDUNES_REG_GRADIENT_STEP;
-    
-    return QPDUNES_REG_LEVENBERG_MARQUARDT;
-}
-
-
-/*
- *	d o u b l e T o L i n e S e a r c h T y p e
- */
-lineSearchType_t doubleToLineSearchType( double from )
-{
-    if ( fabs( from ) < 1e-12 )
-        return QPDUNES_LS_BACKTRACKING_LS;
-    else if ( fabs( from - 1.0 ) < 1e-12 )
-        return QPDUNES_LS_BACKTRACKING_LS_WITH_AS_CHANGE;
-    else if ( fabs( from - 2.0 ) < 1e-12 )
-        return QPDUNES_LS_GOLDEN_SECTION_LS;
-    else if ( fabs( from - 3.0 ) < 1e-12 )
-        return QPDUNES_LS_GRADIENT_BISECTION_LS;
-    else if ( fabs( from - 4.0 ) < 1e-12 )
-        return QPDUNES_LS_ACCELERATED_GRADIENT_BISECTION_LS;
-    else if ( fabs( from - 5.0 ) < 1e-12 )
-        return QPDUNES_LS_GRID_LS;
-    else if ( fabs( from - 6.0 ) < 1e-12 )
-        return QPDUNES_LS_ACCELERATED_GRID_LS;
-    
-    return QPDUNES_LS_BACKTRACKING_LS;
-}
 
 
 /*
@@ -213,7 +229,7 @@ boolean_t getOptionValue( const mxArray* const optionsPtr, const char* const opt
 /*
  *	s e t u p O p t i o n s
  */
-return_t setupOptions( qpOptions_t* options, const mxArray* const optionsPtr )
+return_t qpDUNES_setupOptionsMatlab( qpOptions_t* options, const mxArray* const optionsPtr )
 {
 	double* optionValue;
 
@@ -230,7 +246,7 @@ return_t setupOptions( qpOptions_t* options, const mxArray* const optionsPtr )
 
 	/* logging */
 	if ( getOptionValue( optionsPtr, "logLevel", &optionValue ) == QPDUNES_TRUE )
-		options->logLevel = doubleToLogLevel( *optionValue );
+		options->logLevel = (logLevel_t)*optionValue;
 
 
 	/* printing */
@@ -241,10 +257,10 @@ return_t setupOptions( qpOptions_t* options, const mxArray* const optionsPtr )
 		options->printIntervalHeader = (int_t)*optionValue;
 
 	if ( getOptionValue( optionsPtr, "printIterationTiming", &optionValue ) == QPDUNES_TRUE )
-		options->printIterationTiming = doubleToBoolean( *optionValue );
+		options->printIterationTiming = (boolean_t)*optionValue;
 
 	if ( getOptionValue( optionsPtr, "printLineSearchTiming", &optionValue ) == QPDUNES_TRUE )
-		options->printLineSearchTiming = doubleToBoolean( *optionValue );
+		options->printLineSearchTiming = (boolean_t)*optionValue;
 
 
 	/* numerical tolerances */
@@ -266,12 +282,12 @@ return_t setupOptions( qpOptions_t* options, const mxArray* const optionsPtr )
 
 	/* other options */
 	if ( getOptionValue( optionsPtr, "checkForInfeasibility", &optionValue ) == QPDUNES_TRUE )
-		options->checkForInfeasibility = doubleToBoolean( *optionValue );
+		options->checkForInfeasibility = (boolean_t)*optionValue;
 
 
 	/* regularization options */
 	if ( getOptionValue( optionsPtr, "regType", &optionValue ) == QPDUNES_TRUE )
-		options->regType = doubleToHssnRegType( *optionValue );
+		options->regType = (nwtnHssnRegType_t)*optionValue;
 
 	if ( getOptionValue( optionsPtr, "regParam", &optionValue ) == QPDUNES_TRUE )
 		options->regParam = (real_t)*optionValue;
@@ -279,7 +295,7 @@ return_t setupOptions( qpOptions_t* options, const mxArray* const optionsPtr )
 
 	/* line search options */
 	if ( getOptionValue( optionsPtr, "lsType", &optionValue ) == QPDUNES_TRUE )
-		options->lsType	= doubleToLineSearchType( *optionValue );
+		options->lsType	= (lineSearchType_t)*optionValue;
 
 	if ( getOptionValue( optionsPtr, "lineSearchReductionFactor", &optionValue ) == QPDUNES_TRUE )
 		options->lineSearchReductionFactor = (real_t)*optionValue;
@@ -410,12 +426,12 @@ return_t makeCholNewtonHessianDense( const qpData_t* const qpData,
  /*
  *	f u l l L o g g i n g
  */
-void fullLogging( const mpcProblem_t* const mpcProblem, mxArray** const logPtr )
+void fullLogging( const qpData_t* const qpData, mxArray** const logPtr )
 {
-	int_t numIter = mpcProblem->qpData.log.numIter;
-	int_t nI = mpcProblem->qpData.nI;
-	int_t nX = mpcProblem->qpData.nX;
-	int_t nZ = mpcProblem->qpData.nZ;
+	int_t numIter = qpData->log.numIter;
+	int_t nI = qpData->nI;
+	int_t nX = qpData->nX;
+	int_t nZ = qpData->nZ;
 
 	mwSize dims[2] = { 1, numIter+1 };
 	mwSize nbrOfStructFields = 11;
@@ -444,68 +460,68 @@ void fullLogging( const mpcProblem_t* const mpcProblem, mxArray** const logPtr )
 
 		/* lambda */
 		dataPtr = mxCreateDoubleMatrix(nI*nX,1,mxREAL);												/* allocate array */
-		qpDUNES_copyArray( mxGetPr( dataPtr ), mpcProblem->qpData.log.itLog[ii].lambda.data, nI*nX );	/* copy data to array */
+		qpDUNES_copyArray( mxGetPr( dataPtr ), qpData->log.itLog[ii].lambda.data, nI*nX );	/* copy data to array */
 		mxSetFieldByNumber( *logPtr, ii,lambdaIdx, dataPtr );										/* pass to struct */
 
 		/* deltaLambda */
 		dataPtr = mxCreateDoubleMatrix(nI*nX,1,mxREAL);														/* allocate array */
-		qpDUNES_copyArray( mxGetPr( dataPtr ), mpcProblem->qpData.log.itLog[ii].deltaLambda.data, nI*nX );	/* copy data to array */
+		qpDUNES_copyArray( mxGetPr( dataPtr ), qpData->log.itLog[ii].deltaLambda.data, nI*nX );	/* copy data to array */
 		mxSetFieldByNumber( *logPtr, ii,deltaLambdaIdx, dataPtr );										/* pass to struct */
 
 
 		/* gradient */
 		dataPtr = mxCreateDoubleMatrix(nI*nX,1,mxREAL);												/* allocate array */
-		qpDUNES_copyArray( mxGetPr( dataPtr ), mpcProblem->qpData.log.itLog[ii].gradient.data, nI*nX );	/* copy data to array */
+		qpDUNES_copyArray( mxGetPr( dataPtr ), qpData->log.itLog[ii].gradient.data, nI*nX );	/* copy data to array */
 		mxSetFieldByNumber( *logPtr, ii,gradientIdx, dataPtr );										/* pass to struct */
 
 		/* hessian */
 		dataPtr = mxCreateDoubleMatrix(nI*nX,nI*nX,mxREAL);																/* allocate array */
-		makeNewtonHessianDense( &(mpcProblem->qpData), (real_t*)mxGetPr( dataPtr ), &(mpcProblem->qpData.log.itLog[ii].hessian) );	/* copy data to array */
+		makeNewtonHessianDense( qpData, (real_t*)mxGetPr( dataPtr ), &(qpData->log.itLog[ii].hessian) );	/* copy data to array */
 		mxSetFieldByNumber( *logPtr, ii,hessianIdx, dataPtr );															/* pass to struct */
 
 		/* cholHessian */
 		dataPtr = mxCreateDoubleMatrix(nI*nX,nI*nX,mxREAL);																	/* allocate array */
-		makeCholNewtonHessianDense( &(mpcProblem->qpData), (real_t*)mxGetPr( dataPtr ), &(mpcProblem->qpData.log.itLog[ii].cholHessian) );	/* copy data to array */
+		makeCholNewtonHessianDense( qpData, (real_t*)mxGetPr( dataPtr ), &(qpData->log.itLog[ii].cholHessian) );	/* copy data to array */
 		mxSetFieldByNumber( *logPtr, ii,cholHessianIdx, dataPtr );															/* pass to struct */
 
 		#if defined(__ANALYZE_FACTORIZATION__)
 		/* invHessian */
 		dataPtr = mxCreateDoubleMatrix(nI*nX,nI*nX,mxREAL);																	/* allocate array */
-		qpDUNES_copyArray( mxGetPr( dataPtr ), mpcProblem->qpData.log.itLog[ii].invHessian.data, nI*nX*nI*nX );				/* copy data to array */
+		qpDUNES_copyArray( mxGetPr( dataPtr ), qpData->log.itLog[ii].invHessian.data, nI*nX*nI*nX );				/* copy data to array */
 		mxSetFieldByNumber( *logPtr, ii,invHessianIdx, dataPtr );															/* pass to struct */
 		#endif
 
 		/* z */
 		dataPtr = mxCreateDoubleMatrix(nI*nZ+nX,1,mxREAL);											/* allocate array */
-		qpDUNES_copyArray( mxGetPr( dataPtr ), mpcProblem->qpData.log.itLog[ii].dz.data, nI*nZ+nX );	/* copy data to array */
+		qpDUNES_copyArray( mxGetPr( dataPtr ), qpData->log.itLog[ii].dz.data, nI*nZ+nX );	/* copy data to array */
 		mxSetFieldByNumber( *logPtr, ii,dzIdx, dataPtr );											/* pass to struct */
 
 		/* zUnconstrained */
 		dataPtr = mxCreateDoubleMatrix(nI*nZ+nX,1,mxREAL);														/* allocate array */
-		qpDUNES_copyArray( mxGetPr( dataPtr ), mpcProblem->qpData.log.itLog[ii].zUnconstrained.data, nI*nZ+nX );	/* copy data to array */
+		qpDUNES_copyArray( mxGetPr( dataPtr ), qpData->log.itLog[ii].zUnconstrained.data, nI*nZ+nX );	/* copy data to array */
 		mxSetFieldByNumber( *logPtr, ii,zUnconstrainedIdx, dataPtr );											/* pass to struct */
 
 		/* dz */
 		dataPtr = mxCreateDoubleMatrix(nI*nZ+nX,1,mxREAL);											/* allocate array */
-		qpDUNES_copyArray( mxGetPr( dataPtr ), mpcProblem->qpData.log.itLog[ii].z.data, nI*nZ+nX );		/* copy data to array */
+		qpDUNES_copyArray( mxGetPr( dataPtr ), qpData->log.itLog[ii].z.data, nI*nZ+nX );		/* copy data to array */
 		mxSetFieldByNumber( *logPtr, ii,zIdx, dataPtr );											/* pass to struct */
 
 
 		/* y */
-		dataPtr = mxCreateDoubleMatrix(mpcProblem->qpData.nDttl,2,mxREAL);											/* allocate array */
-		qpDUNES_copyArray( mxGetPr( dataPtr ), mpcProblem->qpData.log.itLog[ii].y.data, 2*mpcProblem->qpData.nDttl );	/* copy data to array */
+		dataPtr = mxCreateDoubleMatrix(qpData->nDttl,2,mxREAL);											/* allocate array */
+		qpDUNES_copyArray( mxGetPr( dataPtr ), qpData->log.itLog[ii].y.data, 2*qpData->nDttl );	/* copy data to array */
 		mxSetFieldByNumber( *logPtr, ii,yIdx, dataPtr );															/* pass to struct */
 
 		/* ieqStatus */
-		int_t nDmax = -1;
-		for( int_t kk=0; kk<nI; ++kk) {
-			if ((int_t)mpcProblem->qpData.intervals[kk]->nD > nDmax)	nDmax = (int_t)mpcProblem->qpData.intervals[kk]->nD;
+		int nDmax = -1;
+		for (int kk=0; kk<nI; ++kk) {
+			if (qpData->intervals[kk]->nD > nDmax)	nDmax = qpData->intervals[kk]->nD;
 		}
 		dataPtr = mxCreateDoubleMatrix(nI,nDmax+nZ,mxREAL);							/* allocate array */
 		double* data = mxGetPr( dataPtr );
-		for( uint_t kk=0; kk<(uint_t)nI; ++kk ) {											/* copy data to array */
-			for( uint_t jj=0; jj<mpcProblem->qpData.intervals[kk]->nD; ++jj ) {											/* copy data to array */
-				data[kk*nDmax+jj] = (double)mpcProblem->qpData.log.itLog[ii].ieqStatus[kk][jj];							/* cast to double while copying */
+		for( int kk=0; kk<nI; ++kk ) {											/* copy data to array */
+			for( int jj=0; jj<qpData->intervals[kk]->nD; ++jj ) {											/* copy data to array */
+				data[kk*nDmax+jj] = (double)qpData->log.itLog[ii].ieqStatus[kk][jj];							/* cast to double while copying */
 			}
 		}
 		mxSetFieldByNumber( *logPtr, ii,ieqStatusIdx, dataPtr );									/* pass to struct */

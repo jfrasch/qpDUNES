@@ -51,13 +51,14 @@ static mpcProblem_t* mpcProblemGlobal = 0;
 /*
  *	m p c D U N E S _ s a f e C l e a n u p M a t l a b
  */
-void mpcDUNES_safeCleanupMatlab( mpcProblem_t** mpcProblemPtr
-						  	 )
+//static void mpcDUNES_safeCleanupMatlab( mpcProblem_t** mpcProblemPtr
+static void mpcDUNES_safeCleanupMatlab(
+										 )
 {
-	if (*mpcProblemPtr != 0) {
-		mpcDUNES_cleanup( *mpcProblemPtr );
-		delete *mpcProblemPtr;
-		*mpcProblemPtr = 0;
+	if (mpcProblemGlobal != 0) {
+		mpcDUNES_cleanup( mpcProblemGlobal );
+		delete mpcProblemGlobal;
+		mpcProblemGlobal = 0;
 	}
 }
 /*<<< END OF mpcDUNES_cleanupMatlab */
@@ -75,17 +76,20 @@ void mpcDUNES_setupMatlab( mpcProblem_t** mpcProblemPtr,
 						  const mxArray* const optionsPtr
 						  )
 {
-	mpcDUNES_safeCleanupMatlab( mpcProblemPtr );
+	mpcDUNES_safeCleanupMatlab( );
 	*mpcProblemPtr = new mpcProblem_t;
 	qpOptions_t qpOptions = qpDUNES_setupDefaultOptions();
 
 	/* set up user options */
     if ( optionsPtr != 0 ) {
-        setupOptions( &(qpOptions), optionsPtr );
+    	qpDUNES_setupOptionsMatlab( &(qpOptions), optionsPtr );
     }
 
 	/* allocate qpDUNES data */
 	mpcDUNES_setup( *mpcProblemPtr, nI, nX, nU, nD, &(qpOptions) );
+
+	/* register mpcDUNES memory for MATLAB-triggered clearing */
+	mexAtExit(mpcDUNES_safeCleanupMatlab);
 }
 /*<<< END OF mpcDUNES_setupMatlab */
 
@@ -271,6 +275,7 @@ void initZStyle( int nrhs, const mxArray* const prhs[] )
 
 	real_t* P = 0;
 
+	mxArray* gPtr = 0;
 	real_t* g = 0;
 
 	mxArray* Cptr = 0;
@@ -297,11 +302,12 @@ void initZStyle( int nrhs, const mxArray* const prhs[] )
 	nIuser = (real_t*)  mxGetPr( prhs[0] );
 	Hptr = (mxArray*)prhs[1];	/* to get dimensions */
 	P = (real_t*) mxGetPr( prhs[2] );
+	gPtr = (mxArray*)prhs[3];	/* to check dimensions */
 	g = (real_t*) mxGetPr( prhs[3] );
 	Cptr = (mxArray*)prhs[4];	/* to get dimensions */
 	c = (real_t*) mxGetPr( prhs[5] );
-	zUppPtr = (mxArray*)prhs[7];
 	zLowPtr = (mxArray*)prhs[6];
+	zUppPtr = (mxArray*)prhs[7];
 	zRefPtr = (mxArray*)prhs[8];
 	if ( ( nrhs == 10 ) &&					/* check whether options are specified */
 		 ( !mxIsEmpty(prhs[nrhs-1]) ) &&
@@ -353,9 +359,13 @@ void initZStyle( int nrhs, const mxArray* const prhs[] )
 
 
 	/* 4) check dimension consistency */
+	/* ToDo: check dimensions of all inputs! */
 	if ( !isLTI ) {
 		if ( nColsH != nI*nZ )	mexErrMsgTxt( "ERROR (qpDUNES): Detected inputs for LTV system, but dimensions of H are inconsistent." );
 		if ( nColsC != nI*nZ )	mexErrMsgTxt( "ERROR (qpDUNES): Detected inputs for LTV system, but dimensions of C are inconsistent." );
+		if ( g != 0 ) {		/* g given */
+			if ( mxGetM( gPtr )*mxGetN( gPtr ) != nI*nZ + nX )	mexErrMsgTxt( "ERROR (qpDUNES): Detected inputs for LTV system, but dimensions of g are inconsistent." );
+		}
 	}
 	else {
 		if ( nColsC != nZ )	mexErrMsgTxt( "ERROR (qpDUNES): Detected inputs for LTI system, but dimensions of C are inconsistent." );
@@ -533,7 +543,7 @@ void updateZStyle( mpcProblem_t* mpcProblem, int nrhs, const mxArray* const prhs
 	}
 	if ( g != 0 ) {		/* g given */
 		if ( !mpcProblem->isLTI ) {
-			if ( mxGetM( gPtr )*mxGetN( gPtr ) != nI*nZ )	mexErrMsgTxt( "ERROR (qpDUNES): Detected g, but inconsistent dimensionality for LTV system (set up originally)." );
+			if ( mxGetM( gPtr )*mxGetN( gPtr ) != nI*nZ + nX )	mexErrMsgTxt( "ERROR (qpDUNES): Detected g, but inconsistent dimensionality for LTV system (set up originally)." );
 		}
 		else {
 			/* g do not need to be updated b/c LTI */
@@ -708,16 +718,16 @@ void solveMatlab( int nlhs, mxArray* plhs[], int nrhs, const mxArray* const prhs
 
 
 	/* ALLOCATE OUTPUTS */
-	allocateOutputs( plhs,nlhs, mpcProblemGlobal->qpData.nI,mpcProblemGlobal->qpData.nX,mpcProblemGlobal->qpData.nU );
+	allocateOutputsMPC( plhs,nlhs, mpcProblemGlobal->qpData.nI,mpcProblemGlobal->qpData.nX,mpcProblemGlobal->qpData.nU );
 
 
-	/* SOLVE QP42 PROBLEM: */
+	/* SOLVE QPDUNES PROBLEM: */
 	return_t statusFlag = mpcDUNES_solve( mpcProblemGlobal, x0 );
 	if ( statusFlag != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND ) {
 		mexPrintf( "qpDUNES returned flag %d\n", statusFlag );
 		if (mpcProblemGlobal->qpData.options.logLevel == QPDUNES_LOG_ALL_DATA ) {
 			if ( nlhs == 5 ) {
-				fullLogging( mpcProblemGlobal, &(plhs[4]) );
+				fullLogging( &(mpcProblemGlobal->qpData), &(plhs[4]) );
 			}
 			mexPrintf( "ERROR (qpDUNES): Problem could not be solved!\n" );
 		}
@@ -728,13 +738,13 @@ void solveMatlab( int nlhs, mxArray* plhs[], int nrhs, const mxArray* const prhs
 
 
 	/* V) PASS SOLUTION ON TO MATLAB: */
-	obtainOutputs( mpcProblemGlobal, plhs, nlhs );
+	obtainOutputsMPC( mpcProblemGlobal, plhs, nlhs );
 
 
 	/* VI) PASS DETAILED LOG INFORMATION ON TO MATLAB: */
 	if (mpcProblemGlobal->qpData.options.logLevel == QPDUNES_LOG_ALL_DATA ) {
 		if ( nlhs == 5 ) {
-			fullLogging( mpcProblemGlobal, &(plhs[4]) );
+			fullLogging( &(mpcProblemGlobal->qpData), &(plhs[4]) );
 		}
 	}
 
@@ -839,7 +849,8 @@ void mexFunction( int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[] )
 		 ( strcmp( typeString,"Cleanup" ) == 0 ) ||
 		 ( strcmp( typeString,"CLEANUP" ) == 0 ) )
 	{
-		mpcDUNES_safeCleanupMatlab( &mpcProblemGlobal );
+		mexWarnMsgTxt( "[qpDUNES]: A 'cleanup' is not needed anymore and the command will be deprecated in the future.\n                    Simply do a new 'init', use MATLAB's 'clear mpcDUNES', or exit MATLAB." );
+		/*mpcDUNES_safeCleanupMatlab( &mpcProblemGlobal );*/
 
 		return;
 	}

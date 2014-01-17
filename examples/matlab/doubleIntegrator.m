@@ -126,10 +126,6 @@ qpOptions = qpDUNES_options( 'default', ...
 disp( ['Solving double integrator [nI = ', num2str(nI), ', nX = ', num2str(nX), ', nU = ', num2str(nU), ']'] );
 
 
-% -- CLEANUP --
-mpcDUNES( 'cleanup' );		% not really needed, just to be safe
-
-
 % -- INIT z-STYLE --
 mpcDUNES( 'init', nI, ...
           H, P, [], C, cFull, ...
@@ -141,8 +137,6 @@ mpcDUNES( 'init', nI, ...
 %           [], zLow, zUpp, zRef );
 % -- SOLVE --
 [uOpt, xOpt, stat, objFctnVal] = mpcDUNES( 'solve', x0 );
-% -- CLEANUP --
-mpcDUNES( 'cleanup' );
 
 
 %% plotting

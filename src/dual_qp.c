@@ -1804,7 +1804,9 @@ return_t qpDUNES_bisectionIntervalSearch(	qpData_t* const qpData,
 		/* break if maximum step size reached */
 		if (alphaMax > qpData->options.lineSearchMaxStepSize) {
 			*alpha = alphaMin;
-			qpDUNES_printWarning(qpData, __FILE__, __LINE__, "Bisection interval search: Maximum step size reached");
+			if ( qpData->options.printLevel >= 3 ) {
+				qpDUNES_printWarning(qpData, __FILE__, __LINE__, "(info) Bisection interval search: Maximum step size reached");
+			}
 			if ( qpData->options.printLevel >= 3 ) {
 				qpDUNES_printf("Alpha = %.15e taken prior to stationarity, alphaSlope = %.15e, normalization = %.15e", *alpha, alphaSlope, slopeNormalization );
 			}
