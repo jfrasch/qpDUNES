@@ -49,13 +49,13 @@ dt = 0.01;              % discretization sampling time 10ms, needed for constrai
 % Problem data
 
 Hi = [[ 1.e-4, 0.0  , 0.0   ]
-	  [ 0.0  , 1.e-4, 0.0   ]
+      [ 0.0  , 1.e-4, 0.0   ]
       [ 0.0  , 0.0  , 1.0e0 ]];
 gi = [ 0.0;
        0.0;
        0.0 ];
 P = [[ 1.e-4, 0.0 ]
-	 [ 0.0  , 1.e-4    ]];
+     [ 0.0  , 1.e-4    ]];
 	
 Ci = [[ 1.0, 1.0*dt, 0.0    ]
       [ 0.0, 1.0   , 1.0*dt ]];	
