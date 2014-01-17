@@ -106,20 +106,20 @@ qpDUNES( 'init', nI, ...
           zLow, zUpp, ...
           [], [], [], ...        % affine constraints not yet supported
           qpOptions );
-% b) now add an initial value constraint (update on initerval index 0)
-qpDUNES( 'updateInterval', 0, [], [], [], [], [x0,-30], [x0,30], [], [], [] );
+% b) now add an initial value constraint (update on stage index 0)
+qpDUNES( 'stageUpdate', 0, [], [], [], [], [x0,ziLow(nX+1:nZ)], [x0,ziUpp(nX+1:nZ)], [], [], [] );
 % c) solve again
 [zOpt, stat, lambda, mu, objFctnVal] = qpDUNES( 'solve' );
 
-% d) add a terminal constraint (update on initerval index nI)
-qpDUNES( 'updateInterval', nI, [], [], [], [], xf, xf, [], [], [] );
+% d) add a terminal constraint (update on stage index nI)
+qpDUNES( 'stageUpdate', nI, [], [], [], [], xf, xf, [], [], [] );
 % e) solve yet once more
 [zOpt, stat, lambda, mu, objFctnVal] = qpDUNES( 'solve' );
 
 % % f) optional: do a shift and a full data update
 % qpDUNES( 'shift');
 % qpDUNES( 'update', H, P, g, C, c, zLow, zUpp, [], [], [] );
-% qpDUNES( 'updateInterval', 0, [], [], [], [], [x0,-30], [x0,30], [], [], [] );
+% qpDUNES( 'stageUpdate', 0, [], [], [], [], [x0,ziLow(nX+1:nZ)], [x0,ziUpp(nX+1:nZ)], [], [], [] );
 % [zOpt, stat, lambda, mu, objFctnVal] = qpDUNES( 'solve' );
 
 

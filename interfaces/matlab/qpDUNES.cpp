@@ -838,7 +838,17 @@ void mexFunction( int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[] )
 		 ( strcmp( typeString,"intervalUpdate" ) == 0 ) ||
 		 ( strcmp( typeString,"Intervalupdate" ) == 0 ) ||
 		 ( strcmp( typeString,"IntervalUpdate" ) == 0 ) ||
-		 ( strcmp( typeString,"INTERVALUPDATE" ) == 0 ) )
+		 ( strcmp( typeString,"INTERVALUPDATE" ) == 0 ) ||
+		 ( strcmp( typeString,"updatestage" ) == 0 ) ||
+		 ( strcmp( typeString,"updateStage" ) == 0 ) ||
+		 ( strcmp( typeString,"Updatestage" ) == 0 ) ||
+		 ( strcmp( typeString,"UpdateStage" ) == 0 ) ||
+		 ( strcmp( typeString,"UPDATESTAGE" ) == 0 ) ||
+		 ( strcmp( typeString,"stageupdate" ) == 0 ) ||
+		 ( strcmp( typeString,"stageUpdate" ) == 0 ) ||
+		 ( strcmp( typeString,"Stageupdate" ) == 0 ) ||
+		 ( strcmp( typeString,"StageUpdate" ) == 0 ) ||
+		 ( strcmp( typeString,"STAGEUPDATE" ) == 0 ) )
 	{
 		if( qpDataGlobal == 0 )
 			mexErrMsgTxt( "[qpDUNES] Error: QP data needs to initialized at least once before action 'updateInterval' can be performed.\n                 Type 'help qpDUNES' for further information." );
