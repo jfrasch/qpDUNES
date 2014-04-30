@@ -246,7 +246,7 @@ return_t qpDUNES_setupOptionsMatlab( qpOptions_t* options, const mxArray* const 
 
 	/* logging */
 	if ( getOptionValue( optionsPtr, "logLevel", &optionValue ) == QPDUNES_TRUE )
-		options->logLevel = (logLevel_t)*optionValue;
+		options->logLevel = (logLevel_t)((int_t)*optionValue);
 
 
 	/* printing */
@@ -257,10 +257,10 @@ return_t qpDUNES_setupOptionsMatlab( qpOptions_t* options, const mxArray* const 
 		options->printIntervalHeader = (int_t)*optionValue;
 
 	if ( getOptionValue( optionsPtr, "printIterationTiming", &optionValue ) == QPDUNES_TRUE )
-		options->printIterationTiming = (boolean_t)*optionValue;
+		options->printIterationTiming = (boolean_t)((int_t)*optionValue);
 
 	if ( getOptionValue( optionsPtr, "printLineSearchTiming", &optionValue ) == QPDUNES_TRUE )
-		options->printLineSearchTiming = (boolean_t)*optionValue;
+		options->printLineSearchTiming = (boolean_t)((int_t)*optionValue);
 
 
 	/* numerical tolerances */
@@ -282,12 +282,12 @@ return_t qpDUNES_setupOptionsMatlab( qpOptions_t* options, const mxArray* const 
 
 	/* other options */
 	if ( getOptionValue( optionsPtr, "checkForInfeasibility", &optionValue ) == QPDUNES_TRUE )
-		options->checkForInfeasibility = (boolean_t)*optionValue;
+		options->checkForInfeasibility = (boolean_t)((int_t)*optionValue);
 
 
 	/* regularization options */
 	if ( getOptionValue( optionsPtr, "regType", &optionValue ) == QPDUNES_TRUE )
-		options->regType = (nwtnHssnRegType_t)*optionValue;
+		options->regType = (nwtnHssnRegType_t)((int_t)*optionValue);
 
 	if ( getOptionValue( optionsPtr, "regParam", &optionValue ) == QPDUNES_TRUE )
 		options->regParam = (real_t)*optionValue;
@@ -295,7 +295,7 @@ return_t qpDUNES_setupOptionsMatlab( qpOptions_t* options, const mxArray* const 
 
 	/* line search options */
 	if ( getOptionValue( optionsPtr, "lsType", &optionValue ) == QPDUNES_TRUE )
-		options->lsType	= (lineSearchType_t)*optionValue;
+		options->lsType	= (lineSearchType_t)((int_t)*optionValue);
 
 	if ( getOptionValue( optionsPtr, "lineSearchReductionFactor", &optionValue ) == QPDUNES_TRUE )
 		options->lineSearchReductionFactor = (real_t)*optionValue;
@@ -434,7 +434,7 @@ void fullLogging( const qpData_t* const qpData, mxArray** const logPtr )
 	int_t nZ = qpData->nZ;
 
 	mwSize dims[2] = { 1, numIter+1 };
-	mwSize nbrOfStructFields = 11;
+	int nbrOfStructFields = 11;
 	const char *field_names[] = {"lambda", "deltaLambda",
 								  "hessian", "cholHessian", "invHessian", "gradient",
 								  "z", "zUnconstrained", "dz",
