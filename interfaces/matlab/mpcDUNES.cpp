@@ -762,6 +762,9 @@ void solveMatlab( int nlhs, mxArray* plhs[], int nrhs, const mxArray* const prhs
 void mexFunction( int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[] )
 {
 	/* I) CONSISTENCY CHECKS: Ensure that first input is a string */
+	if ( nrhs <= 0 )
+		mexErrMsgTxt( "ERROR (qpDUNES): At least one input argument is required!\nType 'help mpcDUNES' for further information." );
+
 	if ( mxIsChar( prhs[0] ) != 1 )
 		mexErrMsgTxt( "ERROR (qpDUNES): First input argument must be a string!" );
 
