@@ -46,8 +46,18 @@ DEF_TARGET = -o $@
 
 OMPFLAGS = 
 
+##
+##  Uncomment this line if you want a C only version (supports only simple bounds)
+#COMPILE_WITHOUT_QPOASES = 1
 
-CCFLAGS = -Wall -pedantic -Wshadow -O3 -finline-functions -DLINUX -std=c99		##C99 temporary to avoid warnings
+
+ifdef COMPILE_WITHOUT_QPOASES
+	NO_QPOASES_FLAG = -D__SIMPLE_BOUNDS_ONLY__
+else
+	NO_QPOASES_FLAG = 
+endif
+
+CCFLAGS = -Wall -pedantic -Wshadow -O3 -finline-functions -DLINUX ${NO_QPOASES_FLAG} -std=c99		##C99 temporary to avoid warnings
 																											
 
 QPDUNES_LIB         =  -L${SRCDIR} -lqpdunes

@@ -85,7 +85,12 @@ return_t qpDUNES_solve(qpData_t* const qpData) {
 			/* TODO: only resolve first QP, where initial value is embedded, others won't change; take care, if MHE!! */
 
 			/* get solution */
-			statusFlag = qpOASES_doStep(qpData, interval->qpSolverQpoases.qpoasesObject, interval, 1, &(interval->z), &(interval->y), &(interval->q), &(interval->p));
+			#ifndef __SIMPLE_BOUNDS_ONLY__
+				statusFlag = qpOASES_doStep(qpData, interval->qpSolverQpoases.qpoasesObject, interval, 1, &(interval->z), &(interval->y), &(interval->q), &(interval->p));
+			#else
+				qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
+				return QPDUNES_ERR_INVALID_ARGUMENT;
+			#endif /* __SIMPLE_BOUNDS_ONLY__ */
 		}
 	}
 	objValIncumbent = qpDUNES_computeObjectiveValue(qpData);
@@ -486,8 +491,13 @@ return_t qpDUNES_updateAllLocalQPs(	qpData_t* const qpData,
 			clippingQpSolver_updateStageData( qpData, interval, &(interval->lambdaK), &(interval->lambdaK1) );
 			break;
 		case QPDUNES_STAGE_QP_SOLVER_QPOASES:
-			qpOASES_updateStageData( qpData, interval, &(interval->lambdaK), &(interval->lambdaK1) );
-			break;
+			#ifndef __SIMPLE_BOUNDS_ONLY__
+				qpOASES_updateStageData( qpData, interval, &(interval->lambdaK), &(interval->lambdaK1) );
+				break;
+			#else
+				qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
+				return QPDUNES_ERR_INVALID_ARGUMENT;
+			#endif /* __SIMPLE_BOUNDS_ONLY__ */
 		default:
 			qpDUNES_printError( qpData, __FILE__, __LINE__, "Stage QP solver undefined! Bailing out..." );
 			return QPDUNES_ERR_UNKNOWN_ERROR;
@@ -559,15 +569,18 @@ return_t qpDUNES_solveLocalQP(	qpData_t* const qpData,
 		break;
 
 	case QPDUNES_STAGE_QP_SOLVER_QPOASES:
-		statusFlag = qpOASES_hotstart(qpData,
-				interval->qpSolverQpoases.qpoasesObject, interval,
-				&(interval->qpSolverQpoases.qFullStep)); /* qpOASES has homotopy internally, so we work with full first-order terms */
-		if (statusFlag != QPDUNES_OK) {
-			qpDUNES_printError(qpData, __FILE__, __LINE__,
-					"Direct QP solver infeasible.");
-			return statusFlag;
-		}
-		break;
+		#ifndef __SIMPLE_BOUNDS_ONLY__
+			statusFlag = qpOASES_hotstart(qpData, interval->qpSolverQpoases.qpoasesObject, interval, &(interval->qpSolverQpoases.qFullStep)); /* qpOASES has homotopy internally, so we work with full first-order terms */
+			if (statusFlag != QPDUNES_OK) {
+				qpDUNES_printError(qpData, __FILE__, __LINE__,
+						"Direct QP solver infeasible.");
+				return statusFlag;
+			}
+			break;
+		#else
+			qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
+			return QPDUNES_ERR_INVALID_ARGUMENT;
+		#endif /* __SIMPLE_BOUNDS_ONLY__ */
 
 	default:
 		qpDUNES_printError(qpData, __FILE__, __LINE__,
@@ -589,20 +602,23 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 {
 	int_t ii, jj, kk;
 	
+	#ifndef __SIMPLE_BOUNDS_ONLY__
 	boolean_t addToRes;
-	
 	zx_matrix_t* ZTCT;
+	#endif /* __SIMPLE_BOUNDS_ONLY__ */
 
 	x_vector_t* xVecTmp = &(qpData->xVecTmp);
 	xx_matrix_t* xxMatTmp = &(qpData->xxMatTmp);
 	xx_matrix_t* xxMatTmp2 = &(qpData->xxMatTmp2);
 	ux_matrix_t* uxMatTmp = &(qpData->uxMatTmp);
 	zx_matrix_t* zxMatTmp = &(qpData->zxMatTmp);
-	zx_matrix_t* zxMatTmp2 = &(qpData->xzMatTmp);
 
+	#ifndef __SIMPLE_BOUNDS_ONLY__
+	zx_matrix_t* zxMatTmp2 = &(qpData->xzMatTmp);
 	zz_matrix_t* ZT = &(qpData->zzMatTmp);/* TODO: share memory between qpOASES and qpDUNES!!!*/
 	zz_matrix_t* cholProjHess = &(qpData->zzMatTmp2);/* TODO: share memory between qpOASES and qpDUNES!!!*/
 	int_t nFree; /* number of active constraints of stage QP */
+	#endif /* __SIMPLE_BOUNDS_ONLY__ */
 
 	interval_t** intervals = qpData->intervals;
 
@@ -631,11 +647,16 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 			/* get EPE part */
 			if (intervals[kk + 1]->qpSolverSpecification == QPDUNES_STAGE_QP_SOLVER_QPOASES)
 			{
-				qpOASES_getZT(qpData, intervals[kk + 1]->qpSolverQpoases.qpoasesObject, &nFree,	ZT);
-				qpOASES_getCholZTHZ(qpData, intervals[kk + 1]->qpSolverQpoases.qpoasesObject, cholProjHess);
-				backsolveRT_ZTET(qpData, zxMatTmp2, cholProjHess, ZT, xVecTmp, intervals[kk + 1]->nV, nFree);
-				addToRes = QPDUNES_FALSE;
-				multiplyMatrixTMatrixDenseDense(xxMatTmp->data, zxMatTmp2->data, zxMatTmp2->data, nFree, _NX_, _NX_, addToRes);
+				#ifndef __SIMPLE_BOUNDS_ONLY__
+					qpOASES_getZT(qpData, intervals[kk + 1]->qpSolverQpoases.qpoasesObject, &nFree,	ZT);
+					qpOASES_getCholZTHZ(qpData, intervals[kk + 1]->qpSolverQpoases.qpoasesObject, cholProjHess);
+					backsolveRT_ZTET(qpData, zxMatTmp2, cholProjHess, ZT, xVecTmp, intervals[kk + 1]->nV, nFree);
+					addToRes = QPDUNES_FALSE;
+					multiplyMatrixTMatrixDenseDense(xxMatTmp->data, zxMatTmp2->data, zxMatTmp2->data, nFree, _NX_, _NX_, addToRes);
+				#else
+					qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
+					return QPDUNES_ERR_INVALID_ARGUMENT;
+				#endif /* __SIMPLE_BOUNDS_ONLY__ */
 			}
 			else { /* clipping QP solver */
 
@@ -655,17 +676,22 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 			/* add CPC part */
 			if (intervals[kk]->qpSolverSpecification == QPDUNES_STAGE_QP_SOLVER_QPOASES)
 			{
-				/* get data from qpOASES */
-				qpOASES_getZT(qpData, intervals[kk]->qpSolverQpoases.qpoasesObject,	&nFree, ZT);
-				qpOASES_getCholZTHZ(qpData,	intervals[kk]->qpSolverQpoases.qpoasesObject, cholProjHess);
-				/* computer Z.T * C.T */
-				ZTCT = zxMatTmp;
-				multiplyMatrixMatrixTDenseDense(ZTCT->data, ZT->data, intervals[kk]->C.data, nFree, _NZ_, _NX_);
-				/* compute "squareroot" of C_{k} P_{k} C_{k}' */
-				backsolveRT_ZTCT(qpData, zxMatTmp2, cholProjHess, ZTCT, xVecTmp, intervals[kk]->nV, nFree);
-				/* compute C_{k} P_{k} C_{k}' contribution */
-				addToRes = QPDUNES_TRUE;
-				multiplyMatrixTMatrixDenseDense(xxMatTmp->data, zxMatTmp2->data, zxMatTmp2->data, nFree, _NX_, _NX_, addToRes);
+				#ifndef __SIMPLE_BOUNDS_ONLY__
+					/* get data from qpOASES */
+					qpOASES_getZT(qpData, intervals[kk]->qpSolverQpoases.qpoasesObject,	&nFree, ZT);
+					qpOASES_getCholZTHZ(qpData,	intervals[kk]->qpSolverQpoases.qpoasesObject, cholProjHess);
+					/* computer Z.T * C.T */
+					ZTCT = zxMatTmp;
+					multiplyMatrixMatrixTDenseDense(ZTCT->data, ZT->data, intervals[kk]->C.data, nFree, _NZ_, _NX_);
+					/* compute "squareroot" of C_{k} P_{k} C_{k}' */
+					backsolveRT_ZTCT(qpData, zxMatTmp2, cholProjHess, ZTCT, xVecTmp, intervals[kk]->nV, nFree);
+					/* compute C_{k} P_{k} C_{k}' contribution */
+					addToRes = QPDUNES_TRUE;
+					multiplyMatrixTMatrixDenseDense(xxMatTmp->data, zxMatTmp2->data, zxMatTmp2->data, nFree, _NX_, _NX_, addToRes);
+				#else
+					qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
+					return QPDUNES_ERR_INVALID_ARGUMENT;
+				#endif /* __SIMPLE_BOUNDS_ONLY__ */
 			}
 			else { /* clipping QP solver */
 				addCInvHCT(qpData, xxMatTmp, &(intervals[kk]->cholH), &(intervals[kk]->C), &(intervals[kk]->y), xxMatTmp2, uxMatTmp, zxMatTmp);
@@ -691,28 +717,33 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 			}
 			#endif
 			if (intervals[kk]->qpSolverSpecification == QPDUNES_STAGE_QP_SOLVER_QPOASES) {
-				/* get data from qpOASES */
-				qpOASES_getZT(qpData, intervals[kk]->qpSolverQpoases.qpoasesObject,	&nFree, ZT);
-				qpOASES_getCholZTHZ(qpData,	intervals[kk]->qpSolverQpoases.qpoasesObject, cholProjHess);
+				#ifndef __SIMPLE_BOUNDS_ONLY__
+					/* get data from qpOASES */
+					qpOASES_getZT(qpData, intervals[kk]->qpSolverQpoases.qpoasesObject,	&nFree, ZT);
+					qpOASES_getCholZTHZ(qpData,	intervals[kk]->qpSolverQpoases.qpoasesObject, cholProjHess);
 
-				/* compute "squareroot" of C_{k} P_{k} C_{k}' */
-				/* computer Z.T * C.T */
-				multiplyMatrixMatrixTDenseDense(zxMatTmp->data, ZT->data, intervals[kk]->C.data, nFree, _NZ_, _NX_);
-				backsolveRT_ZTCT(qpData, zxMatTmp2, cholProjHess, zxMatTmp, xVecTmp, intervals[kk]->nV, nFree);
+					/* compute "squareroot" of C_{k} P_{k} C_{k}' */
+					/* computer Z.T * C.T */
+					multiplyMatrixMatrixTDenseDense(zxMatTmp->data, ZT->data, intervals[kk]->C.data, nFree, _NZ_, _NX_);
+					backsolveRT_ZTCT(qpData, zxMatTmp2, cholProjHess, zxMatTmp, xVecTmp, intervals[kk]->nV, nFree);
 
-				/* compute "squareroot" of E_{k} P_{k} E_{k}' */
-				backsolveRT_ZTET(qpData, zxMatTmp, cholProjHess, ZT, xVecTmp, intervals[kk]->nV, nFree);
+					/* compute "squareroot" of E_{k} P_{k} E_{k}' */
+					backsolveRT_ZTET(qpData, zxMatTmp, cholProjHess, ZT, xVecTmp, intervals[kk]->nV, nFree);
 
-				/* compute C_{k} P_{k} E_{k}' contribution */
-				addToRes = QPDUNES_FALSE;
-				multiplyMatrixTMatrixDenseDense(xxMatTmp->data, zxMatTmp2->data, zxMatTmp->data, nFree, _NX_, _NX_, addToRes);
+					/* compute C_{k} P_{k} E_{k}' contribution */
+					addToRes = QPDUNES_FALSE;
+					multiplyMatrixTMatrixDenseDense(xxMatTmp->data, zxMatTmp2->data, zxMatTmp->data, nFree, _NX_, _NX_, addToRes);
 
-				/* write Hessian part */
-				for (ii = 0; ii < _NX_; ++ii) {
-					for (jj = 0; jj < _NX_; ++jj) {
-						accHessian( kk, -1, ii, jj ) = - xxMatTmp->data[ii * _NX_ + jj];
+					/* write Hessian part */
+					for (ii = 0; ii < _NX_; ++ii) {
+						for (jj = 0; jj < _NX_; ++jj) {
+							accHessian( kk, -1, ii, jj ) = - xxMatTmp->data[ii * _NX_ + jj];
+						}
 					}
-				}
+				#else
+					qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
+					return QPDUNES_ERR_INVALID_ARGUMENT;
+				#endif /* __SIMPLE_BOUNDS_ONLY__ */
 			}
 			else { /* clipping QP solver */
 				multiplyAInvQ( qpData, &(qpData->xxMatTmp), &(intervals[kk]->C), &(intervals[kk]->cholH) );
@@ -1391,10 +1422,15 @@ return_t qpDUNES_determineStepLength(	qpData_t* const qpData,
 				break;
 
 			case QPDUNES_STAGE_QP_SOLVER_QPOASES:
-				qpOASES_doStep(qpData, interval->qpSolverQpoases.qpoasesObject,
-						interval, *alpha, &(interval->z), &(interval->y),
-						&(interval->q), &(interval->p));
-				break;
+				#ifndef __SIMPLE_BOUNDS_ONLY__
+					qpOASES_doStep(qpData, interval->qpSolverQpoases.qpoasesObject,
+							interval, *alpha, &(interval->z), &(interval->y),
+							&(interval->q), &(interval->p));
+					break;
+				#else
+					qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
+					return QPDUNES_ERR_INVALID_ARGUMENT;
+				#endif /* __SIMPLE_BOUNDS_ONLY__ */
 
 			default:
 				qpDUNES_printError(qpData, __FILE__, __LINE__,
@@ -1485,10 +1521,15 @@ return_t qpDUNES_determineStepLength(	qpData_t* const qpData,
 			break;
 
 		case QPDUNES_STAGE_QP_SOLVER_QPOASES:
-			qpOASES_doStep(qpData, interval->qpSolverQpoases.qpoasesObject,
-					interval, *alpha, &(interval->z), &(interval->y),
-					&(interval->q), &(interval->p));
-			break;
+			#ifndef __SIMPLE_BOUNDS_ONLY__
+				qpOASES_doStep(qpData, interval->qpSolverQpoases.qpoasesObject,
+						interval, *alpha, &(interval->z), &(interval->y),
+						&(interval->q), &(interval->p));
+				break;
+			#else
+				qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
+				return QPDUNES_ERR_INVALID_ARGUMENT;
+			#endif /* __SIMPLE_BOUNDS_ONLY__ */
 
 		default:
 			qpDUNES_printError(qpData, __FILE__, __LINE__,
@@ -2005,8 +2046,13 @@ real_t qpDUNES_computeParametricObjectiveValue(	qpData_t* const qpData,
 			break;
 
 		case QPDUNES_STAGE_QP_SOLVER_QPOASES:
-			qpOASES_doStep( qpData, interval->qpSolverQpoases.qpoasesObject,	interval, alpha, &(interval->z), &(interval->y), qTry, &pTry );
-			break;
+			#ifndef __SIMPLE_BOUNDS_ONLY__
+				qpOASES_doStep( qpData, interval->qpSolverQpoases.qpoasesObject,	interval, alpha, &(interval->z), &(interval->y), qTry, &pTry );
+				break;
+			#else
+				qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
+				return QPDUNES_ERR_INVALID_ARGUMENT;
+			#endif /* __SIMPLE_BOUNDS_ONLY__ */
 
 		default:
 			qpDUNES_printError(qpData, __FILE__, __LINE__,	"Stage QP solver undefined! Bailing out...");

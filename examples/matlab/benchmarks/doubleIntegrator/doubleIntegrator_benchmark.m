@@ -137,8 +137,8 @@ for runIdx = 1:nRuns
 	fprintf('+ run %d of %d +\n', runIdx, nRuns);
 
 	%% FOR ALL SOLVERS LOOP
-% 	for SOLVER = {'QPDUNES', 'FORCES', 'CPLEX', 'QUADPROG'}
-	for SOLVER = {'QPDUNES'}
+	for SOLVER = {'QPDUNES', 'FORCES', 'CPLEX', 'QUADPROG'}
+% 	for SOLVER = {'QPDUNES'}
 
 	if strcmp( SOLVER, 'QPDUNES')
 		%% Q P D U N E S

@@ -257,8 +257,10 @@ interval_t* qpDUNES_allocInterval(	qpData_t* const qpData,
 	/* get memory for qpOASES QP solver */
 	/* TODO: do this only if needed later on in code generated / static memory version */
 	/* TODO: utilize special bound version of qpOASES later on for full Hessians, but box constraints */
+	#ifndef __SIMPLE_BOUNDS_ONLY__
 	interval->qpSolverQpoases.qpoasesObject = qpOASES_contructor( qpData, nV, nD );
 	interval->qpSolverQpoases.qFullStep.data  = (real_t*)calloc( nV,sizeof(real_t) );
+	#endif /* __SIMPLE_BOUNDS_ONLY__ */
 
 
 	interval->qpSolverSpecification = QPDUNES_STAGE_QP_SOLVER_UNDEFINED;
@@ -436,8 +438,10 @@ void qpDUNES_freeInterval(	qpData_t* const qpData,
 	qpDUNES_free( &(interval->qpSolverClipping.dz.data) );
 
 
+	#ifndef __SIMPLE_BOUNDS_ONLY__
 	qpOASES_destructor( &(interval->qpSolverQpoases.qpoasesObject) );
 	qpDUNES_free( &(interval->qpSolverQpoases.qFullStep.data) );
+	#endif /* __SIMPLE_BOUNDS_ONLY__ */
 }
 /*<<< END OF qpDUNES_freeInterval */
 
@@ -1084,6 +1088,7 @@ return_t qpDUNES_setupStageQP(	qpData_t* const qpData,
 	}
 	else
 	{
+		#ifndef __SIMPLE_BOUNDS_ONLY__
 		/* (a) use qpOASES */
 		interval->qpSolverSpecification = QPDUNES_STAGE_QP_SOLVER_QPOASES;
 
@@ -1104,6 +1109,10 @@ return_t qpDUNES_setupStageQP(	qpData_t* const qpData,
 									&(interval->H), &(interval->qpSolverQpoases.qFullStep), /*&(interval->g),*/
 									&(interval->zLow), &(interval->zUpp),
 									&(interval->D), &(interval->dLow), &(interval->dUpp));
+		#else
+			qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
+			return QPDUNES_ERR_INVALID_ARGUMENT;
+		#endif /* __SIMPLE_BOUNDS_ONLY__ */
 	}
 
 	return statusFlag;

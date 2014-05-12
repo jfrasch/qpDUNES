@@ -50,11 +50,18 @@ IFLAGS      =  -I. \
 QPDUNES_OBJECTS = \
 	dual_qp.${OBJEXT} \
 	stage_qp_solver_clipping.${OBJEXT} \
-	stage_qp_solver_qpoases.${OBJEXT} \
 	matrix_vector.${OBJEXT} \
 	setup_qp.${OBJEXT} \
 	utils.${OBJEXT}
 
+
+##  add qpOASES interface if requested
+
+ifndef COMPILE_WITHOUT_QPOASES
+	QPDUNES_OBJECTS := \
+		${QPDUNES_OBJECTS}	\
+		stage_qp_solver_qpoases.${OBJEXT}
+endif
 
 
 ##
