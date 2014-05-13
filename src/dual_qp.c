@@ -1805,7 +1805,7 @@ return_t qpDUNES_bisectionIntervalSearch(	qpData_t* const qpData,
 			zTry = &(interval->zVecTmp);
 			/* get primal variables for trial step length */
 			addVectorScaledVector(zTry,	&(interval->qpSolverClipping.zUnconstrained), alphaMax,	&(interval->qpSolverClipping.dz), interval->nV);
-			directQpSolver_saturateVector(qpData, zTry, &(interval->y), &(interval->zLow), &(interval->zUpp), interval->nV);
+			directQpSolver_saturateVector(qpData, zTry, &(interval->y), &(interval->zLow), &(interval->zUpp), &(interval->H), interval->nV);
 		}
 
 		/* manual gradient computation; TODO: use function, but watch out with z, dz, zTry, etc. */
@@ -1866,7 +1866,7 @@ return_t qpDUNES_bisectionIntervalSearch(	qpData_t* const qpData,
 			zTry = &(interval->zVecTmp);
 			/* get primal variables for trial step length */
 			addVectorScaledVector( zTry, &(interval->qpSolverClipping.zUnconstrained), alphaC, &(interval->qpSolverClipping.dz), interval->nV );
-			directQpSolver_saturateVector( qpData, zTry, &(interval->y), &(interval->zLow), &(interval->zUpp), interval->nV );
+			directQpSolver_saturateVector( qpData, zTry, &(interval->y), &(interval->zLow), &(interval->zUpp), &(interval->H), interval->nV );
 		}
 
 		/* manual gradient computation; TODO: use function, but watch out with z, dz, zTry, etc. */
@@ -1970,17 +1970,57 @@ void qpDUNES_getPrimalSol(const qpData_t* const qpData, real_t* const z) {
 }
 /*<<< END OF qpDUNES_getPrimalSol */
 
+// 
+// /* ----------------------------------------------
+//  * ...
+//  *
+//  >>>>>>                                           */
+// void qpDUNES_getDualSol(const qpData_t* const qpData, real_t* const lambda,
+// 		real_t* const y) {
+// 
+// 	qpDUNES_printWarning( qpData, __FILE__, __LINE__, "getDualSol currently not working" );	/* TODO: fix getDualSol */
+// 
+// 	return;
+// }
+// /*<<< END OF qpDUNES_getDualSol */
 
 /* ----------------------------------------------
  * ...
  *
  >>>>>>                                           */
-void qpDUNES_getDualSol(const qpData_t* const qpData, real_t* const lambda,
-		real_t* const y) {
+return_t qpDUNES_getDualSol(const qpData_t* const qpData, real_t* const lambda, real_t* const y) {
+	int_t kk, ii;
 
-	qpDUNES_printWarning( qpData, __FILE__, __LINE__, "getDualSol currently not working" );	/* TODO: fix getDualSol */
+	int_t nStageMult;
+	int_t nDOffset = 0;
+	
+	qpDUNES_printWarning( qpData, __FILE__, __LINE__, "getDualSol is highly experimental. Expect incorrect multiplers." );
 
-	return;
+	/* get lambda */
+	qpDUNES_copyArray( lambda, qpData->lambda.data, _NI_*_NX_ );
+
+	/* get y */
+	for( kk=0; kk<_NI_+1; ++kk ) {
+		nStageMult = 2* (qpData->intervals[kk]->nV + qpData->intervals[kk]->nD);
+		switch (qpData->intervals[kk]->qpSolverSpecification)	{
+			case QPDUNES_STAGE_QP_SOLVER_CLIPPING:
+				/* we still have to clean the multipliers */
+				for ( ii=0; ii<nStageMult; ++ii )	{
+					y[nDOffset+ii] = (qpData->intervals[kk]->y.data[ii] > 0)  ?  qpData->intervals[kk]->y.data[ii]  :  0.0;
+				}
+				break;
+
+			case QPDUNES_STAGE_QP_SOLVER_QPOASES:
+				qpDUNES_copyArray( &(y[nDOffset]), qpData->intervals[kk]->y.data, nStageMult );
+				break;
+
+			default:
+				qpDUNES_printError( qpData, __FILE__, __LINE__,	"Stage QP %d solver undefined! Bailing out...", kk );
+				return QPDUNES_ERR_INVALID_ARGUMENT;
+		}
+		nDOffset += nStageMult;
+	}
+	return QPDUNES_OK;
 }
 /*<<< END OF qpDUNES_getDualSol */
 

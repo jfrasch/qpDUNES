@@ -127,6 +127,77 @@ return_t directQpSolver_getMinStepsize( const qpData_t* const qpData,
 /*<<< END OF qp42_directQpSolver_doStep */
 
 
+// ----------------------------------------------
+//  * do a step of length alpha
+//  *
+// #>>>>>>                                          
+// return_t directQpSolver_doStep( qpData_t* const qpData,
+// 								interval_t* const interval,
+// 								const z_vector_t* const stepDir,
+// 								real_t alpha,
+// 								z_vector_t* const zUnconstrained,
+// 								z_vector_t* const z,
+// 								d2_vector_t* const mu,
+// 								z_vector_t* const q,
+// 								real_t* const p				)
+// {
+// 	int ii;
+// 
+// 	/* update primal solution and get dual solution
+// 	addVectorScaledVector( zUnconstrained, &(interval->qpSolverClipping.zUnconstrained), alpha, stepDir, interval->nV );
+// 	if ( z == zUnconstrained ) {	/* skip copying if zUnconstrained and z are pointing to the same object (e.g., during line search, when just trying steps)
+// 		directQpSolver_saturateVector( qpData, z, mu, &(interval->zLow), &(interval->zUpp), interval->nV );
+// 	}
+// 	else {
+// 		qpDUNES_copyVector( z, zUnconstrained, interval->nV );
+// 		directQpSolver_saturateVector( qpData, z, mu, &(interval->zLow), &(interval->zUpp), interval->nV );
+// 	}
+// 
+// 	/* update q
+// 	for ( ii=0; ii<interval->nV; ++ii ) {
+// 		q->data[ii] = interval->q.data[ii] + alpha * interval->qpSolverClipping.qStep.data[ii];
+// 	}
+// 
+// 	/* update p
+// 	*p = interval->p + alpha * interval->qpSolverClipping.pStep;
+// 
+// 	return QPDUNES_OK;
+// }
+// /*<<< END OF qp42_directQpSolver_doStep
+// 
+// 
+// ----------------------------------------------
+//  * ...
+//  * 
+// #>>>>>>                                          
+// TODO: pass less arguments
+// return_t directQpSolver_saturateVector(	qpData_t* const qpData,
+// 										d_vector_t* const vec,
+// 										d2_vector_t* const mu,		/* pseudo multipliers, resembling the gaps to the bounds; + active, - inactive
+// 										const d_vector_t* const lb,
+// 										const d_vector_t* const ub,
+// 										int_t nV
+// 										)
+// {
+// 	int_t ii;
+// 	
+// 	for( ii=0; ii<nV; ++ii ) {
+// 		mu->data[2*ii] = lb->data[ii] - vec->data[ii];	/* feasibility gap to lower bound; negative value means inactive
+// 		mu->data[2*ii+1] = vec->data[ii] - ub->data[ii];	/* feasibility gap to upper bound; negative value means inactive
+// 		if ( mu->data[2*ii] >= -qpData->options.activenessTolerance ) {	/* TODO: check if this implementation of activeness Tolerance makes sense
+// 			vec->data[ii] = lb->data[ii];
+// 		}
+// 		else {
+// 			if ( mu->data[2*ii+1] >= -qpData->options.activenessTolerance ) {
+// 				vec->data[ii] = ub->data[ii];
+// 			}
+// 		}
+// 	}
+// 	
+// 	return QPDUNES_OK;
+// }
+// /*<<< END OF qp42_directQpSolver_saturateVector
+
 /* ----------------------------------------------
  * do a step of length alpha
  *
@@ -145,13 +216,13 @@ return_t directQpSolver_doStep( qpData_t* const qpData,
 
 	/* update primal solution and get dual solution */
 	addVectorScaledVector( zUnconstrained, &(interval->qpSolverClipping.zUnconstrained), alpha, stepDir, interval->nV );
-	if ( z == zUnconstrained ) {	/* skip copying if zUnconstrained and z are pointing to the same object (e.g., during line search, when just trying steps) */
-		directQpSolver_saturateVector( qpData, z, mu, &(interval->zLow), &(interval->zUpp), interval->nV );
-	}
-	else {
+	if ( z != zUnconstrained ) {	/* skip copying if zUnconstrained and z are pointing to the same object (e.g., during line search, when just trying steps) */
+//		directQpSolver_saturateVector( qpData, z, mu, &(interval->zLow), &(interval->zUpp), interval->nV );
+//	}
+//	else {
 		qpDUNES_copyVector( z, zUnconstrained, interval->nV );
-		directQpSolver_saturateVector( qpData, z, mu, &(interval->zLow), &(interval->zUpp), interval->nV );
 	}
+	directQpSolver_saturateVector( qpData, z, mu, &(interval->zLow), &(interval->zUpp), &(interval->H), interval->nV );
 
 	/* update q */
 	for ( ii=0; ii<interval->nV; ++ii ) {
@@ -163,7 +234,7 @@ return_t directQpSolver_doStep( qpData_t* const qpData,
 
 	return QPDUNES_OK;
 }
-/*<<< END OF qp42_directQpSolver_doStep */
+/*<<< END OF qpDUNES_directQpSolver_doStep */
 
 
 /* ----------------------------------------------
@@ -173,30 +244,72 @@ return_t directQpSolver_doStep( qpData_t* const qpData,
 /* TODO: pass less arguments */
 return_t directQpSolver_saturateVector(	qpData_t* const qpData,
 										d_vector_t* const vec,
-										d2_vector_t* const mu,		/* pseudo multipliers, resembling the gaps to the bounds; + active, - inactive */
+										d2_vector_t* const mu,		/* multipliers, resembling the gaps to the bounds; + active, - inactive */
 										const d_vector_t* const lb,
 										const d_vector_t* const ub,
+										const zz_matrix_t* const H,
 										int_t nV
 										)
 {
 	int_t ii;
 	
-	for( ii=0; ii<nV; ++ii ) {
-		mu->data[2*ii] = lb->data[ii] - vec->data[ii];	/* feasibility gap to lower bound; negative value means inactive */
-		mu->data[2*ii+1] = vec->data[ii] - ub->data[ii];	/* feasibility gap to upper bound; negative value means inactive */
-		if ( mu->data[2*ii] >= -qpData->options.activenessTolerance ) {	/* TODO: check if this implementation of activeness Tolerance makes sense */
-			vec->data[ii] = lb->data[ii];
-		}
-		else {
-			if ( mu->data[2*ii+1] >= -qpData->options.activenessTolerance ) {
-				vec->data[ii] = ub->data[ii];
+	switch (H->sparsityType)	{
+		case QPDUNES_DIAGONAL:		/* H is saved in first row of memory */
+			for( ii=0; ii<nV; ++ii ) {
+				/* for box constraints and diagonal hessians it holds: lambda_i/H_ii = (zUnconstr_i - zBound_i)	*/
+				mu->data[2*ii] = (lb->data[ii] - vec->data[ii])*H->data[ii];	/* feasibility gap to lower bound; negative value means inactive */
+				mu->data[2*ii+1] = (vec->data[ii] - ub->data[ii])*H->data[ii];	/* feasibility gap to upper bound; negative value means inactive */
+				if ( mu->data[2*ii] >= -qpData->options.activenessTolerance ) {	/* TODO: check if this implementation of activeness Tolerance makes sense */
+					vec->data[ii] = lb->data[ii];
+				}
+				else {
+					if ( mu->data[2*ii+1] >= -qpData->options.activenessTolerance ) {
+						vec->data[ii] = ub->data[ii];
+					}
+				}
 			}
-		}
+			break;
+
+		case QPDUNES_IDENTITY:		/* H values not needed */
+			for( ii=0; ii<nV; ++ii ) {
+				/* for box constraints and diagonal hessians it holds: lambda_i/H_ii = (zUnconstr_i - zBound_i)	*/
+				mu->data[2*ii] = (lb->data[ii] - vec->data[ii]);		/* feasibility gap to lower bound; negative value means inactive */
+				mu->data[2*ii+1] = (vec->data[ii] - ub->data[ii]);		/* feasibility gap to upper bound; negative value means inactive */
+				if ( mu->data[2*ii] >= -qpData->options.activenessTolerance ) {	/* TODO: check if this implementation of activeness Tolerance makes sense */
+					vec->data[ii] = lb->data[ii];
+				}
+				else {
+					if ( mu->data[2*ii+1] >= -qpData->options.activenessTolerance ) {
+						vec->data[ii] = ub->data[ii];
+					}
+				}
+			}
+			break;
+
+		default:
+			qpDUNES_printError( qpData, __FILE__, __LINE__, "Unknown sparsity type of QP hessian" );
+			return QPDUNES_ERR_UNKNOWN_MATRIX_SPARSITY_TYPE;
 	}
+//		if ( interval->y.data[2*ii] > qpData->options.equalityTolerance ) { /* lower bound active */
+//			actSetStatus[kk][ii] = -1;
+//			++(*nActConstr);
+//		}
+//		else {
+//			if ( interval->y.data[2*ii+1] > qpData->options.equalityTolerance ) { /* upper bound active */
+//				actSetStatus[kk][ii] = 1;
+//				++(*nActConstr);
+//			}
+//			else {		/* no constraint bound active */
+//				actSetStatus[kk][ii] = 0;
+//			}
+//		}
 	
+
+
 	return QPDUNES_OK;
 }
 /*<<< END OF qp42_directQpSolver_saturateVector */
+
 
 
 /* ----------------------------------------------

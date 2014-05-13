@@ -208,7 +208,7 @@ void qpDUNES_getPrimalSol(	const qpData_t* const qpData,
 							real_t* const z
 							);
 
-void qpDUNES_getDualSol(	const qpData_t* const qpData,
+return_t qpDUNES_getDualSol(	const qpData_t* const qpData,
 							real_t* const lambda,
 							real_t* const y
 							);

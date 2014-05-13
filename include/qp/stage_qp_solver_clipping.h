@@ -78,12 +78,13 @@ return_t directQpSolver_doStep( qpData_t* const qpData,
 
 /** ... */
 return_t directQpSolver_saturateVector(	qpData_t* const qpData,
-												d_vector_t* const vec, 
-												d2_vector_t* const mu,
-												const d_vector_t* const lb,
-												const d_vector_t* const ub,
-												int_t nD
-												);
+										d_vector_t* const vec, 
+										d2_vector_t* const mu,
+										const d_vector_t* const lb,
+										const d_vector_t* const ub,
+										const zz_matrix_t* const H,
+										int_t nD
+										);
 
 
 /** ... */
