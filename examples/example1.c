@@ -39,8 +39,10 @@
 
 int main( )
 {
-	int i;
+	unsigned int i;
 	boolean_t isLTI;
+
+	return_t statusFlag;
 	
 	
 	/* set dimensions */
@@ -84,23 +86,47 @@ int main( )
 	/* qpData struct */
 	qpData_t qpData;
 
-
 	/* memory allocation */
-	qpDUNES_setup( &qpData, nI, nX, nU, nD, 0 );	/* passing 0 in the last argument sets the default QP options */
+	statusFlag = qpDUNES_setup( &qpData, nI, nX, nU, nD, 0 );	/* passing 0 in the last argument sets the default QP options */
+	if (statusFlag != QPDUNES_OK)
+	{
+		printf("Setup of the QP solver failed\n");
+		return (int)statusFlag;
+	}
 
 
 	/* manual setup of intervals */
 	for( i=0; i<nI; ++i )
 	{
-		qpDUNES_setupSimpleBoundedInterval(  &qpData, qpData.intervals[i],Q,R,S, A,B,c, xLow,xUpp,uLow,uUpp );
+		statusFlag = qpDUNES_setupSimpleBoundedInterval(  &qpData, qpData.intervals[i],Q,R,S, A,B,c, xLow,xUpp,uLow,uUpp );
+		if (statusFlag != QPDUNES_OK)
+		{
+			printf("Setup of the QP solver failed\n");
+			return (int)statusFlag;
+		}
 	}
-	qpDUNES_setupSimpleBoundedInterval(  &qpData, qpData.intervals[nI], P,0,0, 0,0,0, xLow,xUpp,0,0 );
+	statusFlag = qpDUNES_setupSimpleBoundedInterval(  &qpData, qpData.intervals[nI], P,0,0, 0,0,0, xLow,xUpp,0,0 );
+	if (statusFlag != QPDUNES_OK)
+	{
+		printf("Setup of the QP solver failed\n");
+		return (int)statusFlag;
+	}
 
-	qpDUNES_setupAllLocalQPs( &qpData, isLTI=QPDUNES_TRUE );	/* determine local QP solvers and set up auxiliary data */
+	statusFlag = qpDUNES_setupAllLocalQPs( &qpData, isLTI=QPDUNES_TRUE );	/* determine local QP solvers and set up auxiliary data */
+	if (statusFlag != QPDUNES_OK)
+	{
+		printf("Setup of the QP solver failed\n");
+		return (int)statusFlag;
+	}
 
 
 	/* solve problem */
-	qpDUNES_solve( &qpData );
+	statusFlag = qpDUNES_solve( &qpData );
+	if (statusFlag != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND)
+	{
+		printf("QP solver failed. The error code is: %d\n", statusFlag);
+		return (int)statusFlag;
+	}
 	
 	
 	/* write out solution */

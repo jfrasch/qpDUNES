@@ -170,8 +170,12 @@ int main( )
 
 
 	/** (3) allocate data for qpDUNES and set options */
-	qpDUNES_setup( &qpData, nI, nX, nU, nD, &(qpOptions) );
-	
+	statusFlag = qpDUNES_setup( &qpData, nI, nX, nU, nD, &(qpOptions) );
+	if (statusFlag != QPDUNES_OK)
+	{
+		printf("Setup of the QP solver failed\n");
+		return (int)statusFlag;
+	}
 
 	/** (4) set sparsity of primal Hessian and local constraint matrix */
 // 	for ( kk=0; kk<nI+1; ++kk ) {

@@ -167,10 +167,20 @@ int main( )
 
 
 	/** setup qpDUNES internal data */
-	mpcDUNES_setup( &mpcProblem, nI, nX, nU, nD, &(qpOptions) );
+	statusFlag = mpcDUNES_setup( &mpcProblem, nI, nX, nU, nD, &(qpOptions) );
+ 	if (statusFlag != QPDUNES_OK)
+	{
+		printf("Setup of the QP solver failed\n");
+		return (int)statusFlag;
+	}
 	
 	t = getTime();
 	statusFlag = mpcDUNES_initLtiSb( &mpcProblem,  H, P, 0,  C, c,  zLow, zUpp,  zRef );	/** initialize MPC problem; note that matrices are factorized here */
+	if (statusFlag != QPDUNES_OK)
+	{
+		printf("Initialization of the MPC problem failed\n");
+		return (int)statusFlag;
+	}
 	tMeas = getTime() - t;
 	
 	tPrepTtl += tMeas;
@@ -181,7 +191,12 @@ int main( )
  	for ( iter=0; iter<nSteps; ++iter ) {
  		/** solve QP for current initial value */
 		t = getTime();
-		mpcDUNES_solve( &mpcProblem, x0 );
+		statusFlag = mpcDUNES_solve( &mpcProblem, x0 );
+		if (statusFlag != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND)
+		{
+			printf("QP solver failed. The error code is: %d\n", statusFlag);
+			return (int)statusFlag;
+		}
 		tMeas = getTime() - t;
 		
 		tSolTtl += tMeas;
@@ -199,7 +214,12 @@ int main( )
 
  		/** prepare QP for next solution:  put new data in second but last interval */
 		t = getTime();
-		qpDUNES_updateIntervalData( &(mpcProblem.qpData), mpcProblem.qpData.intervals[nI-1], 0, 0, 0, 0, ziLow,ziUpp, 0, 0,0, 0 );		/* H, C, c do not need to be updated b/c LTI */
+		statusFlag = qpDUNES_updateIntervalData( &(mpcProblem.qpData), mpcProblem.qpData.intervals[nI-1], 0, 0, 0, 0, ziLow,ziUpp, 0, 0,0, 0 );		/* H, C, c do not need to be updated b/c LTI */
+		if (statusFlag != QPDUNES_OK)
+		{
+			printf("Update of interval data failed\n");
+			return (int)statusFlag;
+		}
 		tMeas = getTime() - t;
 
 		tPrepTtl += tMeas;
