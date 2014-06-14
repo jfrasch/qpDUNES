@@ -32,10 +32,10 @@
 #	2013 - 2014.
 #
 # Usage:
-#	- TBD
+#	- mkdir build && cd build && cmake .. && make && make test
+#   - For installation of the library and corr. headers: sudo make install
 #
 ################################################################################
-
 
 ################################################################################
 #
@@ -108,6 +108,9 @@ IF( OPENMP_FOUND )
 	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 ENDIF()
 
+# This will add the "make test" target
+ENABLE_TESTING()
+
 ################################################################################
 #
 # Include directories
@@ -134,7 +137,6 @@ SET( qpDUNES_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/include/qp/matrix_vector.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/qp/setup_qp.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/qp/stage_qp_solver_clipping.h
-	${CMAKE_CURRENT_SOURCE_DIR}/include/qp/stage_qp_solver_qpoases.hpp
 	${CMAKE_CURRENT_SOURCE_DIR}/include/qp/types.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/qp/utils.h
 	# mpcDUNES
@@ -144,7 +146,6 @@ SET( qpDUNES_HEADERS
 SET( qpDUNES_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/dual_qp.c
 	${CMAKE_CURRENT_SOURCE_DIR}/src/stage_qp_solver_clipping.c
-	${CMAKE_CURRENT_SOURCE_DIR}/src/stage_qp_solver_qpoases.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/matrix_vector.c
 	${CMAKE_CURRENT_SOURCE_DIR}/src/setup_qp.c
 	${CMAKE_CURRENT_SOURCE_DIR}/src/utils.c
@@ -186,6 +187,11 @@ FOREACH( EXAMPLE ${qpDUNES_EXAMPLES} )
 	SET_TARGET_PROPERTIES( example_${EXEC_NAME} 
 		PROPERTIES
 		OUTPUT_NAME "${EXEC_NAME}"		   
+	)
+	ADD_TEST(
+		NAME test_${EXEC_NAME}
+		WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
+		COMMAND ${EXEC_NAME}
 	)
 ENDFOREACH()
 
@@ -234,20 +240,8 @@ SET( qpDUNES_ENV_LIBRARY_DIRS
 	${LIBRARY_OUTPUT_PATH}
 )
 
-SET( qpDUNES_ENV_BUILD_DIR
-	${PROJECT_BINARY_DIR}
-)
-
 SET( qpDUNES_ENV_STATIC_LIBRARIES
 	qpdunes
-)
-
-SET( qpDUNES_ENV_HEADERS
-	${qpDUNES_HEADERS}
-)
-
-SET( qpDUNES_ENV_SOURCES
-	${qpDUNES_SOURCES}
 )
 
 CONFIGURE_FILE(

@@ -31,7 +31,7 @@
 #	Milan Vukov, milan.vukov@esat.kuleuven.be
 #
 # Year:
-#	2013.
+#	2013 - 2014.
 #
 # NOTE:
 #	- This script is for Linux/Unix use only.
@@ -82,29 +82,21 @@ ENDIF( qpDUNES_LIBRARY_DIRS )
 # Libraries
 #
 FIND_LIBRARY( qpDUNES_STATIC_LIBRARIES
-	NAMES qpDUNES
+	NAMES qpdunes
 	PATHS ${qpDUNES_LIBRARY_DIRS}
 	NO_DEFAULT_PATH
 )
 IF( qpDUNES_STATIC_LIBRARIES )
-	MESSAGE( STATUS "Found qpDUNES static library: qpDUNES\n" )
+	MESSAGE( STATUS "Found qpDUNES static library: ${qpDUNES_STATIC_LIBRARIES} \n" )
 ELSE( qpDUNES_STATIC_LIBRARIES )
-	MESSAGE( STATUS "Could not find qpDUNES static library: qpDUNES\n" )
+	MESSAGE( STATUS "Could not find qpDUNES static library.\n" )
 	SET( qpDUNES_STATIC_LIBS_FOUND FALSE )
 ENDIF( qpDUNES_STATIC_LIBRARIES )
 
 #
-# Set sources and headers
-# TODO Validation
-#
-SET( qpDUNES_SOURCES $ENV{qpDUNES_ENV_SOURCES} )
-SET( qpDUNES_HEADERS $ENV{qpDUNES_ENV_HEADERS} )
-
-#
 # And finally set found flag...
 #
-IF( qpDUNES_INCLUDE_DIRS_FOUND AND qpDUNES_LIBRARY_DIRS_FOUND 
-		AND qpDUNES_STATIC_LIBS_FOUND )
+IF( qpDUNES_INCLUDE_DIRS_FOUND AND qpDUNES_LIBRARY_DIRS_FOUND AND qpDUNES_STATIC_LIBS_FOUND )
 	SET( qpDUNES_FOUND TRUE )
 ENDIF()
 

@@ -30,7 +30,7 @@
 #	Milan Vukov, milan.vukov@esat.kuleuven.be
 #
 # Year:
-#	2013.
+#	2013 - 2014.
 #
 # NOTE:
 #	- Linux/Unix only.
@@ -54,15 +54,7 @@
 export qpDUNES_ENV_INCLUDE_DIRS="@qpDUNES_ENV_INCLUDE_DIRS@"
 export qpDUNES_ENV_LIBRARY_DIRS="@qpDUNES_ENV_LIBRARY_DIRS@"
 
-export qpDUNES_ENV_BUILD_DIR="@qpDUNES_ENV_BUILD_DIR@"
-
 #
 # List of qpDUNES libraries
 #
 export qpDUNES_ENV_STATIC_LIBRARIES="@qpDUNES_ENV_STATIC_LIBRARIES@"
-
-#
-# Sources and headers
-#
-export qpDUNES_ENV_SOURCES="@qpDUNES_ENV_SOURCES@"
-export qpDUNES_ENV_HEADERS="@qpDUNES_ENV_HEADERS@"
