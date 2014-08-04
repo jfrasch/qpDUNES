@@ -89,10 +89,14 @@ return_t qpDUNES_solve(qpData_t* const qpData) {
 				statusFlag = qpOASES_doStep(qpData, interval->qpSolverQpoases.qpoasesObject, interval, 1, &(interval->z), &(interval->y), &(interval->q), &(interval->p));
 			#else
 				qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
-				return QPDUNES_ERR_INVALID_ARGUMENT;
+				statusFlag = QPDUNES_ERR_INVALID_ARGUMENT;
 			#endif /* __SIMPLE_BOUNDS_ONLY__ */
 		}
+
+		if (statusFlag != QPDUNES_OK)
+			break;
 	}
+
 	objValIncumbent = qpDUNES_computeObjectiveValue(qpData);
 	#ifdef __MEASURE_TIMINGS__
 	tQpEnd = getTime();
@@ -254,10 +258,15 @@ return_t qpDUNES_solve(qpData_t* const qpData) {
 		#ifdef __MEASURE_TIMINGS__
 		tQpStart = getTime();
 		#endif
-		qpDUNES_solveAllLocalQPs(qpData, &(qpData->deltaLambda));
+		statusFlag = qpDUNES_solveAllLocalQPs(qpData, &(qpData->deltaLambda));
 		#ifdef __MEASURE_TIMINGS__
 		tQpEnd = getTime();
 		#endif
+		if (statusFlag != QPDUNES_OK)
+		{
+			qpDUNES_printError(qpData, __FILE__, __LINE__,	"QP solution for full step failed.");
+			return statusFlag;
+		}
 		/* clipping solver: now unsaturated dz is available locally */
 
 
@@ -470,6 +479,7 @@ return_t qpDUNES_updateAllLocalQPs(	qpData_t* const qpData,
 {
 	int_t kk;
 	interval_t* interval;
+	return_t statusFlag = QPDUNES_OK;
 
 	/* first interval: */
 	interval = qpData->intervals[0];
@@ -488,23 +498,23 @@ return_t qpDUNES_updateAllLocalQPs(	qpData_t* const qpData,
 		interval = qpData->intervals[kk];
 		switch (interval->qpSolverSpecification) {
 		case QPDUNES_STAGE_QP_SOLVER_CLIPPING:
-			clippingQpSolver_updateStageData( qpData, interval, &(interval->lambdaK), &(interval->lambdaK1) );
+			statusFlag = clippingQpSolver_updateStageData( qpData, interval, &(interval->lambdaK), &(interval->lambdaK1) );
 			break;
 		case QPDUNES_STAGE_QP_SOLVER_QPOASES:
 			#ifndef __SIMPLE_BOUNDS_ONLY__
-				qpOASES_updateStageData( qpData, interval, &(interval->lambdaK), &(interval->lambdaK1) );
+				statusFlag = qpOASES_updateStageData( qpData, interval, &(interval->lambdaK), &(interval->lambdaK1) );
 				break;
 			#else
 				qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
-				return QPDUNES_ERR_INVALID_ARGUMENT;
+				statusFlag =  QPDUNES_ERR_INVALID_ARGUMENT;
 			#endif /* __SIMPLE_BOUNDS_ONLY__ */
 		default:
 			qpDUNES_printError( qpData, __FILE__, __LINE__, "Stage QP solver undefined! Bailing out..." );
-			return QPDUNES_ERR_UNKNOWN_ERROR;
+			statusFlag = QPDUNES_ERR_UNKNOWN_ERROR;
 		}
 	}
 
-	return QPDUNES_OK;
+	return statusFlag;
 }
 /*<<< END OF qpDUNES_updateAllLocalQPs */
 
@@ -518,32 +528,43 @@ return_t qpDUNES_solveAllLocalQPs(	qpData_t* const qpData,
 								)
 {
 	int_t kk;
+#ifndef __QPDUNES_PARALLEL__
 	int_t errCntr = 0;
-	return_t statusFlag;
+#endif
+	return_t statusFlag = QPDUNES_OK;
 
 	/* 1) update local QP data */
-	qpDUNES_updateAllLocalQPs(qpData, lambda);
+	statusFlag = qpDUNES_updateAllLocalQPs(qpData, lambda);
+	if (statusFlag != QPDUNES_OK)
+		return statusFlag;
 
 	/* 2) solve local QPs */
 	/* TODO: check what happens in case of errors (return)*/
 	/* Note: const variables are predetermined shared (at least on apple)*/
 	#pragma omp parallel for private(kk) shared(statusFlag) schedule(static) /*shared(qpData)*/  /* TODO: manage threads outside!*/
-		for (kk = 0; kk < _NI_ + 1; ++kk) {
-			statusFlag = qpDUNES_solveLocalQP(qpData, qpData->intervals[kk]);
-			if (statusFlag != QPDUNES_OK) { /* note that QPDUNES_OK == 0 */
-				qpDUNES_printError(qpData, __FILE__, __LINE__,	"QP on interval %d infeasible!", kk);
-				errCntr++;
-			}
-			#if defined (__QPDUNES_PARALLEL__)
-			/*			qpDUNES_printf("Computed QP %d by thread %d/%d.", kk, omp_get_thread_num(), omp_get_num_threads() );*/
+	for (kk = 0; kk < _NI_ + 1; ++kk)
+	{
+		statusFlag = qpDUNES_solveLocalQP(qpData, qpData->intervals[kk]);
+		if (statusFlag != QPDUNES_OK)
+		{
+			qpDUNES_printError(qpData, __FILE__, __LINE__,	"QP on interval %d infeasible!", kk);
+			#ifndef __QPDUNES_PARALLEL__
+			break;
+			#else
+			errCntr++;
 			#endif
 		}
-/*	}*/ /* END of omp parallel */
-	if (errCntr > 0) {
-		return QPDUNES_ERR_STAGE_QP_INFEASIBLE;
+
+		#ifdef __QPDUNES_PARALLEL__
+		/*			qpDUNES_printf("Computed QP %d by thread %d/%d.", kk, omp_get_thread_num(), omp_get_num_threads() );*/			
+		#endif
 	}
 
-	return QPDUNES_OK;
+	#ifdef __QPDUNES_PARALLEL__
+	statusFlag = errCntr > 0 ? QPDUNES_ERR_STAGE_QP_INFEASIBLE : QPDUNES_OK;
+	#endif
+
+	return statusFlag;
 }
 /*<<< END OF qpDUNES_solveAllLocalQPs */
 
@@ -556,39 +577,35 @@ return_t qpDUNES_solveLocalQP(	qpData_t* const qpData,
 							interval_t* const interval
 							)
 {
-	return_t statusFlag;
+	return_t statusFlag = QPDUNES_OK;
 
 	/* set up local QP in standard form for solver and solve it */
 	switch (interval->qpSolverSpecification) {
 	case QPDUNES_STAGE_QP_SOLVER_CLIPPING:
 		statusFlag = directQpSolver_solveUnconstrained(qpData, interval, &(interval->qpSolverClipping.qStep)); /* solve QPs in first-order term updates only, to mimic homotopy */
-		if (statusFlag != QPDUNES_OK) {
+		if (statusFlag != QPDUNES_OK)
 			qpDUNES_printError(qpData, __FILE__, __LINE__, "Direct QP solver infeasible.");
-			return statusFlag;
-		}
 		break;
 
 	case QPDUNES_STAGE_QP_SOLVER_QPOASES:
 		#ifndef __SIMPLE_BOUNDS_ONLY__
 			statusFlag = qpOASES_hotstart(qpData, interval->qpSolverQpoases.qpoasesObject, interval, &(interval->qpSolverQpoases.qFullStep)); /* qpOASES has homotopy internally, so we work with full first-order terms */
-			if (statusFlag != QPDUNES_OK) {
+			if (statusFlag != QPDUNES_OK)
 				qpDUNES_printError(qpData, __FILE__, __LINE__,
 						"Direct QP solver infeasible.");
-				return statusFlag;
-			}
 			break;
 		#else
 			qpDUNES_printError( qpData, __FILE__, __LINE__, "The flag '__SIMPLE_BOUNDS_ONLY__' was set at compile time.\n          Hence, no QPs with dense Hessian or affine constraints are supported." );
-			return QPDUNES_ERR_INVALID_ARGUMENT;
+			statusFlag = QPDUNES_ERR_INVALID_ARGUMENT;
 		#endif /* __SIMPLE_BOUNDS_ONLY__ */
 
 	default:
 		qpDUNES_printError(qpData, __FILE__, __LINE__,
 				"Stage QP solver undefined! Bailing out...");
-		return QPDUNES_ERR_UNKNOWN_ERROR;
+		statusFlag = QPDUNES_ERR_UNKNOWN_ERROR;
 	}
 
-	return QPDUNES_OK;
+	return statusFlag;
 }
 /*<<< END OF qpDUNES_solveLocalQP */
 
@@ -623,6 +640,8 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 	interval_t** intervals = qpData->intervals;
 
 	xn2x_matrix_t* hessian = &(qpData->hessian);
+
+	return_t statusFlag;
 
 	/** calculate gradient and check gradient norm for convergence */
 	qpDUNES_computeNewtonGradient(qpData, &(qpData->gradient), xVecTmp);
@@ -660,10 +679,15 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 			}
 			else { /* clipping QP solver */
 
-				getInvQ(qpData, xxMatTmp, &(intervals[kk + 1]->cholH), intervals[kk + 1]->nV); /* getInvQ not supported with matrices other than diagonal... is this even possible? */
+				statusFlag = getInvQ(qpData, xxMatTmp, &(intervals[kk + 1]->cholH), intervals[kk + 1]->nV); /* getInvQ not supported with matrices other than diagonal... is this even possible? */
+				if (statusFlag != QPDUNES_OK)
+					break;
 
 				/* Annihilate columns in invQ; WARNING: this can really only be applied for diagonal matrices */
-				qpDUNES_makeMatrixDense(xxMatTmp, _NX_, _NX_);
+				statusFlag = qpDUNES_makeMatrixDense(xxMatTmp, _NX_, _NX_);
+				if (statusFlag != QPDUNES_OK)
+					break;
+				
 				for (ii = 0; ii < _NX_; ++ii) {
 					if ((intervals[kk + 1]->y.data[2 * ii] >= qpData->options.equalityTolerance) ||		/* check if local constraint lb_x is active*/
 						(intervals[kk + 1]->y.data[2 * ii + 1] >= qpData->options.equalityTolerance))	/* check if local constraint ub_x is active*/	/* WARNING: weakly active constraints are excluded here!*/
@@ -694,7 +718,9 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 				#endif /* __SIMPLE_BOUNDS_ONLY__ */
 			}
 			else { /* clipping QP solver */
-				addCInvHCT(qpData, xxMatTmp, &(intervals[kk]->cholH), &(intervals[kk]->C), &(intervals[kk]->y), xxMatTmp2, uxMatTmp, zxMatTmp);
+				statusFlag = addCInvHCT(qpData, xxMatTmp, &(intervals[kk]->cholH), &(intervals[kk]->C), &(intervals[kk]->y), xxMatTmp2, uxMatTmp, zxMatTmp);
+				if (statusFlag != QPDUNES_OK)
+					break;
 			}
 
 			/* write Hessian part */
@@ -707,6 +733,13 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 			}
 		}
 	}	/* END OF diagonal block for loop */
+
+	if (statusFlag != QPDUNES_OK)
+	{
+		qpDUNES_printError( qpData, __FILE__, __LINE__, "Building of diagonal blocks of the Hessian failed." );
+		qpDUNES_printf("Building of the Hessian failed at iteration %d.", kk);
+		return statusFlag;
+	}
 
 	/* 2) sub-diagonal blocks */
 	for (kk = 1; kk < _NI_; ++kk) {
@@ -746,7 +779,9 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 				#endif /* __SIMPLE_BOUNDS_ONLY__ */
 			}
 			else { /* clipping QP solver */
-				multiplyAInvQ( qpData, &(qpData->xxMatTmp), &(intervals[kk]->C), &(intervals[kk]->cholH) );
+				statusFlag = multiplyAInvQ( qpData, &(qpData->xxMatTmp), &(intervals[kk]->C), &(intervals[kk]->cholH) );
+				if (statusFlag != QPDUNES_OK)
+					break;
 
 				/* write Hessian part */
 				for (ii=0; ii<_NX_; ++ii) {
@@ -768,8 +803,14 @@ return_t qpDUNES_setupNewtonSystem(	qpData_t* const qpData
 	}	/* END OF sub-diagonal block for loop */
 
 /*	qpDUNES_printMatrixData( qpData->hessian.data, _NI_*_NX_, 2*_NX_, "H = ");*/
+	
+	if (statusFlag != QPDUNES_OK)
+	{
+		qpDUNES_printError( qpData, __FILE__, __LINE__, "Building of sub-diagonal blocks of the Hessian failed." );
+		qpDUNES_printf("Building of the Hessian sub-blocks failed at iteration %d.", kk);
+	}
 
-	return QPDUNES_OK;
+	return statusFlag;
 }
 /*<<< END OF qpDUNES_setupNewtonSystem */
 
