@@ -53,11 +53,11 @@
 /*#define __MEASURE_TIMINGS__*/				/* measure computation times */
 /*#undef __MEASURE_TIMINGS__*/
 
-#define __ANALYZE_FACTORIZATION__			/* log inverse Newton Hessian for analysis */
-#undef __ANALYZE_FACTORIZATION__
+/*#define __ANALYZE_FACTORIZATION__*/			/* log inverse Newton Hessian for analysis */
+/*#undef __ANALYZE_FACTORIZATION__*/
 
-#define __QPDUNES_PARALLEL__				/* use openMP parallelization */
-#undef __QPDUNES_PARALLEL__
+/*#define __QPDUNES_PARALLEL__*/			/* use openMP parallelization */
+/*#undef __QPDUNES_PARALLEL__*/
 
 #define PRINTING_PRECISION 14
 
