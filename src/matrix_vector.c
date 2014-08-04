@@ -158,12 +158,18 @@ return_t multiplyCz(	qpData_t* const qpData,
 {
 	/** only dense multiplication */
 	int_t ii, jj;
+	real_t* _C = C->data;
+	real_t* _z = z->data;
+	real_t* _res = res->data;
 	
-	for( ii = 0; ii < _NX_; ++ii ) {
-		res->data[ii] = 0.;
-		for( jj = 0; jj < _NZ_; ++jj ) {
-			res->data[ii] += accC(ii,jj) * z->data[jj];
-		}
+	for( ii = 0; ii < _NX_; ++ii )
+	{
+		real_t foo = 0.0;
+		real_t* _Crow = _C + ii * _NZ_;
+		for( jj = 0; jj < _NZ_; ++jj )
+			foo += _Crow[ jj ] * _z[ jj ];
+		
+		_res[ ii ] = foo;
 	}
 	
 	return QPDUNES_OK;
@@ -184,15 +190,20 @@ return_t multiplyCTy(	qpData_t* const qpData,
 {
 	/** only dense multiplication */
 	int_t ii, jj;
+	real_t* _C = C->data;
+	real_t* _y = y->data;
+	real_t* _res = res->data;
 	
 	/* change multiplication order for more efficient memory access */
-	for( jj = 0; jj < _NZ_; ++jj ) {
-		res->data[jj] = 0.;
-	}
-	for( ii = 0; ii < _NX_; ++ii ) {
-		for( jj = 0; jj < _NZ_; ++jj ) {
-			res->data[jj] += accC(ii,jj) * y->data[ii];
-		}
+	for( jj = 0; jj < _NZ_; ++jj )
+		_res[ jj ] = 0.0;
+	
+	for( ii = 0; ii < _NX_; ++ii )
+	{
+		real_t foo = _y[ ii ];
+		real_t* _Crow = _C + ii * _NZ_;
+		for( jj = 0; jj < _NZ_; ++jj )
+			_res[ jj ] += _Crow[ jj ] * foo;
 	}
 	
 	return QPDUNES_OK;

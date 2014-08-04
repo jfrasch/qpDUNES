@@ -161,6 +161,8 @@ return_t qpDUNES_updateMatrixData(	matrix_t* const to,
 								)
 {
 	int_t i;
+	real_t* _to = to->data;
+	unsigned _dim = nRows * nCols;
 	
 	if ( from == 0 )
 		return QPDUNES_OK;
@@ -171,13 +173,13 @@ return_t qpDUNES_updateMatrixData(	matrix_t* const to,
 	switch ( to->sparsityType )
 	{
 		case QPDUNES_DENSE:
-			for( i=0; i<nRows*nCols; ++i )
-				to->data[i] = from[i];
+			for (i = 0; i < _dim; ++i)
+				_to[ i ] = from[ i ];
 			break;
 			
 		case QPDUNES_DIAGONAL:
-			for( i=0; i<nRows; ++i )
-				to->data[i] = from[i*nCols+i];
+			for (i = 0; i < nRows; ++i)
+				_to[ i ] = from[i * nCols + i];
 			break;
 			
 		case QPDUNES_IDENTITY:
