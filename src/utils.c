@@ -685,11 +685,11 @@ void qpDUNES_printStrArgs(	const char* const string,
 						...
 						)
 {
-    #ifdef __MATLAB__
+    #ifndef __SUPPRESS_ALL_OUTPUT__
+	#ifdef __MATLAB__
         char buffer[MAX_STR_LEN];
     #endif
 	
-	#ifndef __SUPPRESS_ALL_OUTPUT__
 	/* get printf arguments list */
 	va_list printArgs;
 	va_start( printArgs, string );
@@ -777,6 +777,7 @@ void qpDUNES_printf(	const char* const string,
 					... 
 					)
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	/* get printf arguments list */
 	va_list printArgs;
 	va_start( printArgs, string );
@@ -786,6 +787,7 @@ void qpDUNES_printf(	const char* const string,
 	qpDUNES_printStrArgs( "\n" );
 	
 	va_end( printArgs );
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qpDUNES_printf */
 
@@ -797,6 +799,7 @@ void qpDUNES_printf_noNewLine(	const char* const string,
 							...
 							)
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	/* get printf arguments list */
 	va_list printArgs;
 	va_start( printArgs, string );
@@ -805,6 +808,7 @@ void qpDUNES_printf_noNewLine(	const char* const string,
 	qpDUNES_printStrArgsList( string, printArgs );
 
 	va_end( printArgs );
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qp42_printf */
 
@@ -819,6 +823,7 @@ void qpDUNES_printSuccess( const qpData_t* const qpData,
 						...
 						)
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	/* get printf arguments list */
 	va_list printArgs;
 	va_start( printArgs, string );
@@ -831,6 +836,7 @@ void qpDUNES_printSuccess( const qpData_t* const qpData,
 	}
 
 	va_end( printArgs );
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qp42_printSuccess */
 
@@ -844,13 +850,13 @@ void qpDUNES_printWarning(	const qpData_t* const qpData,
 						const int_t lineNumber,
 						const char* const string )
 {
-	#if !(defined __SUPPRESS_ALL_WARNINGS__)
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	if( qpData->options.printLevel >= 2 ) {
 		qpDUNES_printStrArgs( "[qpDUNES] %s", COL_WARN );
 		qpDUNES_printStrArgs( "WARNING in %s:%d: \n          %s",fileName, lineNumber, COL_STD );
 		qpDUNES_printStrArgs( "%s\n", string );
 	}
-	#endif
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qp42_printWarning */
 
@@ -866,6 +872,7 @@ void qpDUNES_printError(	const qpData_t* const qpData,
 						...
 						)
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	/* get printf arguments list */
 	va_list printArgs;
 	va_start( printArgs, errString );
@@ -879,6 +886,7 @@ void qpDUNES_printError(	const qpData_t* const qpData,
 	}
 	
 	va_end( printArgs );
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qp42_printError */
 
@@ -890,7 +898,9 @@ void qpDUNES_printError(	const qpData_t* const qpData,
  >>>>>                                            */
 void qpDUNES_printDebugInfo( const char* const string )
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	qpDUNES_printf( string );
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qp42_printDebugInfo */
 
@@ -907,6 +917,7 @@ void qpDUNES_printMatrixData(	const real_t* const M,
 							...
 							)
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	int_t ii, jj;
 	
 	/* get printf arguments list */
@@ -931,6 +942,7 @@ void qpDUNES_printMatrixData(	const real_t* const M,
 	qpDUNES_printStrArgs( "]\n" );
 	
 	va_end( printArgs );
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qp42_printMatrix */
 
@@ -948,6 +960,7 @@ void qpDUNES_printMatrixDataToFile(	const real_t* const M,
 									...
 									)
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	int_t ii, jj;
 
 	/* get printf arguments list */
@@ -975,6 +988,7 @@ void qpDUNES_printMatrixDataToFile(	const real_t* const M,
 
 	fclose(filePtr);		/* close file */
 	va_end( printArgs );
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qp42_printMatrixDataToFile */
 
@@ -989,6 +1003,7 @@ void qpDUNES_printVectorData(	const real_t* const x,
 							... 
 							)
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	int_t ii;
 	
 	/* get printf arguments list */
@@ -1006,6 +1021,7 @@ void qpDUNES_printVectorData(	const real_t* const x,
 	qpDUNES_printStrArgs( "]\n\n" );
 	
 	va_end( printArgs );
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qp42_printMatrix */
 
@@ -1016,8 +1032,10 @@ void qpDUNES_printVectorData(	const real_t* const x,
  >>>>>                                            */
 void qpDUNES_printVector( const char* const string )
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 /*	qp42_printWarning( __FILE__, __LINE__, "qp42_printVector not yet implemented. Doing nothing." );*/
 	qpDUNES_printf( "qp42_printVector not yet implemented. Doing nothing." );
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qp42_printVector */
 
@@ -1030,6 +1048,7 @@ void qpDUNES_printNewtonHessian(	const qpData_t* const qpData,
 								const xn2x_matrix_t* const hessian
 								)
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	uint_t ii, jj, kk;
 
 	qpDUNES_printStrArgs( "NewtonHessian = ...\n" );
@@ -1058,6 +1077,7 @@ void qpDUNES_printNewtonHessian(	const qpData_t* const qpData,
 	}
 
 	qpDUNES_printStrArgs( "]\n\n" );
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qp42_printNewtonHessian */
 
@@ -1074,6 +1094,7 @@ void qpDUNES_printNewtonHessianToFile(	const qpData_t* const qpData,
 									...
 									)
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	uint_t ii, jj, kk;
 
 	va_list printArgs;
@@ -1113,6 +1134,7 @@ void qpDUNES_printNewtonHessianToFile(	const qpData_t* const qpData,
 
 
 	fclose(filePtr);		/* close file */
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qp42_printNewtonHessianToFile */
 
@@ -1125,6 +1147,7 @@ void qpDUNES_printCholNewtonHessian(	const qpData_t* const qpData,
 									const xn2x_matrix_t* const cholHessian
 									)
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	uint_t ii, jj, kk;
 
 	qpDUNES_printStrArgs( "Cholesky factor of Newton Hessian\n" );
@@ -1150,6 +1173,7 @@ void qpDUNES_printCholNewtonHessian(	const qpData_t* const qpData,
 	}
 
 	qpDUNES_printStrArgs( "]\n\n" );
+	#endif /* #ifndef __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qpDUNES_printCholNewtonHessian */
 
@@ -1160,6 +1184,7 @@ void qpDUNES_printCholNewtonHessian(	const qpData_t* const qpData,
  >>>>>                                            */
 void qpDUNES_printHeader( qpData_t* qpData )
 {
+	#ifndef __SUPPRESS_ALL_OUTPUT__
 	if ( qpData->options.printLevel > 0 ) {
 		qpDUNES_printStrArgs( "\nqpDUNES -- A DUal NEwton Strategy for convex quadratic programming.\n" );
 		qpDUNES_printStrArgs( "Copyright (C) 2012-2014 by Janick Frasch and Hans Joachim Ferreau.\n" );
@@ -1173,10 +1198,39 @@ void qpDUNES_printHeader( qpData_t* qpData )
 		qpDUNES_printStrArgs( "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n" );
 		qpDUNES_printStrArgs( "GNU Lesser General Public License for more details.\n\n" );
 	}
+	#endif /* __SUPPRESS_ALL_OUTPUT__ */
 }
 /*<<< END OF qpDUNES_printHeader */
 
+#define TO_STR( k ) (char* const)#k
 
+const char* qpDUNES_getErrorString( int code )
+{
+	/* Obviously, this array needs to keep the order of return_t enumeration. */
+	static char* const errorStrings[] = 
+	{
+		TO_STR(QPDUNES_UNTERMINATED),
+		TO_STR(QPDUNES_OK),
+
+		TO_STR(QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND),
+		TO_STR(QPDUNES_ERR_STAGE_QP_INFEASIBLE),
+		TO_STR(QPDUNES_ERROR_STAGE_COUPLING_INFEASIBLE),
+
+		TO_STR(QPDUNES_ERR_UNKNOWN_ERROR),
+		TO_STR(QPDUNES_ERR_UNKNOWN_MATRIX_SPARSITY_TYPE),
+		TO_STR(QPDUNES_ERR_UNKNOWN_LS_TYPE),
+		TO_STR(QPDUNES_ERR_INVALID_ARGUMENT),
+		TO_STR(QPDUNES_ERR_ITERATION_LIMIT_REACHED),
+		TO_STR(QPDUNES_ERR_DIVISION_BY_ZERO),
+		TO_STR(QPDUNES_ERR_NUMBER_OF_MAX_LINESEARCH_ITERATIONS_REACHED),
+		TO_STR(QPDUNES_ERR_DECEEDED_MIN_LINESEARCH_STEPSIZE),
+		TO_STR(QPDUNES_ERR_EXCEEDED_MAX_LINESEARCH_STEPSIZE),
+		TO_STR(QPDUNES_ERR_NEWTON_SYSTEM_NO_ASCENT_DIRECTION),
+		TO_STR(QPDUNES_NOTICE_NEWTON_MATRIX_NOT_SET_UP)
+	};
+
+	return errorStrings[code + abs( QPDUNES_UNTERMINATED )];
+}
 
 
 /*

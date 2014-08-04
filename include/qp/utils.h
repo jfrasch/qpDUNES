@@ -716,6 +716,15 @@ void qpDUNES_printCholNewtonHessian(	const qpData_t* const qpData,
  */
 void qpDUNES_printHeader( qpData_t* qpData );
 
+/**
+ *	\brief Get error string
+ *
+ *	\author Milan Vukov
+ *	\version 1.0beta
+ *	\date 2014
+ */
+const char* qpDUNES_getErrorString( int code );
+
 
 #endif	/* QPDUNES_UTILS_H */
 
