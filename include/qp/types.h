@@ -214,7 +214,7 @@ typedef enum
 /** Error codes */
 typedef enum
 {
-	QPDUNES_UNTERMINATED,
+	QPDUNES_UNTERMINATED = -1,
 	QPDUNES_OK = 0,							/**< ... */
 
 	QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND,
