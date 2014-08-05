@@ -230,6 +230,8 @@ ADD_LIBRARY(
 	${qpDUNES_SOURCES}
 )
 
+TARGET_LINK_LIBRARIES( qpdunes m )
+
 #
 # Build the examples
 # NOTE: Assumption is that all examples are in C and that one example
