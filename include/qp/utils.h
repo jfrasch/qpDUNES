@@ -64,6 +64,15 @@
 void qpDUNES_free(	real_t** data
 				);
 
+/** 
+ *	\brief A bit safer calloc. Internally does assert against NULL pointer.
+ *
+ *	\author Milan Vukov
+ *	\version 1.0beta
+ *	\date 2014
+ */
+void* qpDUNES_calloc(size_t num, size_t size);
+
 
 /**
  *	\brief ...

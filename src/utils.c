@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <math.h>
 
 #include <qp/utils.h>
@@ -51,6 +52,13 @@ void qpDUNES_free(	real_t** data
 	}
 }
 /*<<< END OF qp42_free */
+
+void* qpDUNES_calloc(size_t num, size_t size)
+{
+	void* foo = calloc(num, size);
+	assert( foo );
+	return foo;
+}
 
 
 /* ----------------------------------------------

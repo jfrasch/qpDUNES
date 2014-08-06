@@ -77,7 +77,7 @@ return_t qpDUNES_setup(	qpData_t* const qpData,
 		return QPDUNES_ERR_INVALID_ARGUMENT;
 	}
 
-	qpData->intervals = (interval_t**)calloc( nI+1,sizeof(interval_t*) );
+	qpData->intervals = (interval_t**)qpDUNES_calloc( nI+1,sizeof(interval_t*) );
 
 
 	/* normal intervals */
@@ -87,9 +87,9 @@ return_t qpDUNES_setup(	qpData_t* const qpData,
 		
 		qpData->intervals[ii]->id = ii;		/* give interval its initial stage index */
 
-		qpData->intervals[ii]->xVecTmp.data  = (real_t*)calloc( nX,sizeof(real_t) );
-		qpData->intervals[ii]->uVecTmp.data  = (real_t*)calloc( nU,sizeof(real_t) );
-		qpData->intervals[ii]->zVecTmp.data  = (real_t*)calloc( nZ,sizeof(real_t) );
+		qpData->intervals[ii]->xVecTmp.data  = (real_t*)qpDUNES_calloc( nX,sizeof(real_t) );
+		qpData->intervals[ii]->uVecTmp.data  = (real_t*)qpDUNES_calloc( nU,sizeof(real_t) );
+		qpData->intervals[ii]->zVecTmp.data  = (real_t*)qpDUNES_calloc( nZ,sizeof(real_t) );
 	}
 	
 
@@ -101,9 +101,9 @@ return_t qpDUNES_setup(	qpData_t* const qpData,
 	qpDUNES_setMatrixNull( &( qpData->intervals[nI]->C ) );
 	qpDUNES_free( &(qpData->intervals[nI]->c.data) );
 
-	qpData->intervals[nI]->xVecTmp.data  = (real_t*)calloc( nX,sizeof(real_t) );
-	qpData->intervals[nI]->uVecTmp.data  = (real_t*)calloc( nU,sizeof(real_t) );
-	qpData->intervals[nI]->zVecTmp.data  = (real_t*)calloc( nZ,sizeof(real_t) );
+	qpData->intervals[nI]->xVecTmp.data  = (real_t*)qpDUNES_calloc( nX,sizeof(real_t) );
+	qpData->intervals[nI]->uVecTmp.data  = (real_t*)qpDUNES_calloc( nU,sizeof(real_t) );
+	qpData->intervals[nI]->zVecTmp.data  = (real_t*)qpDUNES_calloc( nZ,sizeof(real_t) );
 	
 	
 	/* undefined not-defined lambda parts */
@@ -113,26 +113,26 @@ return_t qpDUNES_setup(	qpData_t* const qpData,
 
 
 	/* remainder of qpData struct */
-	qpData->lambda.data      = (real_t*)calloc( nX*nI,sizeof(real_t) );
-	qpData->deltaLambda.data = (real_t*)calloc( nX*nI,sizeof(real_t) );
+	qpData->lambda.data      = (real_t*)qpDUNES_calloc( nX*nI,sizeof(real_t) );
+	qpData->deltaLambda.data = (real_t*)qpDUNES_calloc( nX*nI,sizeof(real_t) );
 	
-	qpData->hessian.data  = (real_t*)calloc( (nX*2)*(nX*nI),sizeof(real_t) );
-	qpData->cholHessian.data  = (real_t*)calloc( (nX*2)*(nX*nI),sizeof(real_t) );
-	qpData->gradient.data = (real_t*)calloc( nX*nI,sizeof(real_t) );
+	qpData->hessian.data  = (real_t*)qpDUNES_calloc( (nX*2)*(nX*nI),sizeof(real_t) );
+	qpData->cholHessian.data  = (real_t*)qpDUNES_calloc( (nX*2)*(nX*nI),sizeof(real_t) );
+	qpData->gradient.data = (real_t*)qpDUNES_calloc( nX*nI,sizeof(real_t) );
 	
 	
-	qpData->xVecTmp.data  = (real_t*)calloc( nX,sizeof(real_t) );
-	qpData->uVecTmp.data  = (real_t*)calloc( nU,sizeof(real_t) );
-	qpData->zVecTmp.data  = (real_t*)calloc( nZ,sizeof(real_t) );
-	qpData->xnVecTmp.data  = (real_t*)calloc( nX*nI,sizeof(real_t) );
-	qpData->xnVecTmp2.data  = (real_t*)calloc( nX*nI,sizeof(real_t) );
-	qpData->xxMatTmp.data = (real_t*)calloc( nX*nX,sizeof(real_t) );
-	qpData->xxMatTmp2.data = (real_t*)calloc( nX*nX,sizeof(real_t) );
-	qpData->xzMatTmp.data = (real_t*)calloc( nX*nZ,sizeof(real_t) );
-	qpData->uxMatTmp.data = (real_t*)calloc( nU*nX,sizeof(real_t) );
-	qpData->zxMatTmp.data = (real_t*)calloc( nZ*nX,sizeof(real_t) );
-	qpData->zzMatTmp.data = (real_t*)calloc( nZ*nZ,sizeof(real_t) );
-	qpData->zzMatTmp2.data = (real_t*)calloc( nZ*nZ,sizeof(real_t) );
+	qpData->xVecTmp.data  = (real_t*)qpDUNES_calloc( nX,sizeof(real_t) );
+	qpData->uVecTmp.data  = (real_t*)qpDUNES_calloc( nU,sizeof(real_t) );
+	qpData->zVecTmp.data  = (real_t*)qpDUNES_calloc( nZ,sizeof(real_t) );
+	qpData->xnVecTmp.data  = (real_t*)qpDUNES_calloc( nX*nI,sizeof(real_t) );
+	qpData->xnVecTmp2.data  = (real_t*)qpDUNES_calloc( nX*nI,sizeof(real_t) );
+	qpData->xxMatTmp.data = (real_t*)qpDUNES_calloc( nX*nX,sizeof(real_t) );
+	qpData->xxMatTmp2.data = (real_t*)qpDUNES_calloc( nX*nX,sizeof(real_t) );
+	qpData->xzMatTmp.data = (real_t*)qpDUNES_calloc( nX*nZ,sizeof(real_t) );
+	qpData->uxMatTmp.data = (real_t*)qpDUNES_calloc( nU*nX,sizeof(real_t) );
+	qpData->zxMatTmp.data = (real_t*)qpDUNES_calloc( nZ*nX,sizeof(real_t) );
+	qpData->zzMatTmp.data = (real_t*)qpDUNES_calloc( nZ*nZ,sizeof(real_t) );
+	qpData->zzMatTmp2.data = (real_t*)qpDUNES_calloc( nZ*nZ,sizeof(real_t) );
 	
 	
 	/* set incumbent objective function value to minus infinity */
@@ -143,52 +143,52 @@ return_t qpDUNES_setup(	qpData_t* const qpData,
 	if ( qpData->options.logLevel >= QPDUNES_LOG_ITERATIONS )
 	{
 		qpDUNES_setupLog( qpData );
-		qpData->log.itLog = (itLog_t*)calloc( qpData->options.maxIter+1, sizeof(itLog_t) );
+		qpData->log.itLog = (itLog_t*)qpDUNES_calloc( qpData->options.maxIter+1, sizeof(itLog_t) );
 
 		for( ii=0; ii<qpData->options.maxIter+1; ++ii ) {
-			qpData->log.itLog[ii].ieqStatus = (int_t**)calloc( nI+1,sizeof(int_t*) );
+			qpData->log.itLog[ii].ieqStatus = (int_t**)qpDUNES_calloc( nI+1,sizeof(int_t*) );
 			for( kk=0; kk<nI+1; ++kk ) {
-				qpData->log.itLog[ii].ieqStatus[kk] = (int_t*)calloc( ((nD != 0) ? nD[kk] : 0) + _NV(kk),sizeof(int_t) );
+				qpData->log.itLog[ii].ieqStatus[kk] = (int_t*)qpDUNES_calloc( ((nD != 0) ? nD[kk] : 0) + _NV(kk),sizeof(int_t) );
 			}
 			qpData->log.itLog[ii].prevIeqStatus = 0;
 
 			if ( qpData->options.logLevel == QPDUNES_LOG_ALL_DATA )
 			{
-				qpData->log.itLog[ii].regDirections.data = (real_t*)calloc( nX*nI,sizeof(real_t) );
+				qpData->log.itLog[ii].regDirections.data = (real_t*)qpDUNES_calloc( nX*nI,sizeof(real_t) );
 
-				qpData->log.itLog[ii].lambda.data      = (real_t*)calloc( nX*nI,sizeof(real_t) );
-				qpData->log.itLog[ii].deltaLambda.data = (real_t*)calloc( nX*nI,sizeof(real_t) );
+				qpData->log.itLog[ii].lambda.data      = (real_t*)qpDUNES_calloc( nX*nI,sizeof(real_t) );
+				qpData->log.itLog[ii].deltaLambda.data = (real_t*)qpDUNES_calloc( nX*nI,sizeof(real_t) );
 
-				qpData->log.itLog[ii].gradient.data = (real_t*)calloc( nX*nI,sizeof(real_t) );
-				qpData->log.itLog[ii].hessian.data  = (real_t*)calloc( (nX*2)*(nX*nI),sizeof(real_t) );
-				qpData->log.itLog[ii].cholHessian.data  = (real_t*)calloc( (nX*2)*(nX*nI),sizeof(real_t) );
+				qpData->log.itLog[ii].gradient.data = (real_t*)qpDUNES_calloc( nX*nI,sizeof(real_t) );
+				qpData->log.itLog[ii].hessian.data  = (real_t*)qpDUNES_calloc( (nX*2)*(nX*nI),sizeof(real_t) );
+				qpData->log.itLog[ii].cholHessian.data  = (real_t*)qpDUNES_calloc( (nX*2)*(nX*nI),sizeof(real_t) );
 				#if defined(__ANALYZE_FACTORIZATION__)
-				qpData->log.itLog[ii].invHessian.data =  (real_t*)calloc( (nX*nI)*(nX*nI),sizeof(real_t) );
+				qpData->log.itLog[ii].invHessian.data =  (real_t*)qpDUNES_calloc( (nX*nI)*(nX*nI),sizeof(real_t) );
 				#endif
 
-				qpData->log.itLog[ii].dz.data = (real_t*)calloc( nI*nZ+nX,sizeof(real_t) );
-				qpData->log.itLog[ii].zUnconstrained.data = (real_t*)calloc( nI*nZ+nX,sizeof(real_t) );
-				qpData->log.itLog[ii].z.data  = (real_t*)calloc( nI*nZ+nX,sizeof(real_t) );
-				qpData->log.itLog[ii].y.data  = (real_t*)calloc( 2*nZ + 2*nDttl,sizeof(real_t) );
+				qpData->log.itLog[ii].dz.data = (real_t*)qpDUNES_calloc( nI*nZ+nX,sizeof(real_t) );
+				qpData->log.itLog[ii].zUnconstrained.data = (real_t*)qpDUNES_calloc( nI*nZ+nX,sizeof(real_t) );
+				qpData->log.itLog[ii].z.data  = (real_t*)qpDUNES_calloc( nI*nZ+nX,sizeof(real_t) );
+				qpData->log.itLog[ii].y.data  = (real_t*)qpDUNES_calloc( 2*nZ + 2*nDttl,sizeof(real_t) );
 				/* TODO: make multiplier definition clean! */
 			}
 		}
 
 		/* memory for itLog[0].prevIeqStatus needed in any case to enable AS comparison between subsequently solved QPs */
-		qpData->log.itLog[0].prevIeqStatus = (int_t**)calloc( nI+1,sizeof(int_t*) );
+		qpData->log.itLog[0].prevIeqStatus = (int_t**)qpDUNES_calloc( nI+1,sizeof(int_t*) );
 		for( kk=0; kk<nI+1; ++kk ) {
-			qpData->log.itLog[0].prevIeqStatus[kk] = (int_t*)calloc( ((nD != 0) ? nD[kk] : 0) + _NV(kk),sizeof(int_t) );
+			qpData->log.itLog[0].prevIeqStatus[kk] = (int_t*)qpDUNES_calloc( ((nD != 0) ? nD[kk] : 0) + _NV(kk),sizeof(int_t) );
 		}
 	}
 	else {
 		/* allocate only memory to check active set changes */
 		/* TODO: even remove this when no printing */
-		qpData->log.itLog = (itLog_t*)calloc( 1, sizeof(itLog_t) );
-		qpData->log.itLog[0].ieqStatus = (int_t**)calloc( nI+1,sizeof(int_t*) );
-		qpData->log.itLog[0].prevIeqStatus = (int_t**)calloc( nI+1,sizeof(int_t*) );
+		qpData->log.itLog = (itLog_t*)qpDUNES_calloc( 1, sizeof(itLog_t) );
+		qpData->log.itLog[0].ieqStatus = (int_t**)qpDUNES_calloc( nI+1,sizeof(int_t*) );
+		qpData->log.itLog[0].prevIeqStatus = (int_t**)qpDUNES_calloc( nI+1,sizeof(int_t*) );
 		for( kk=0; kk<nI+1; ++kk ) {
-			qpData->log.itLog[0].ieqStatus[kk] = (int_t*)calloc( ((nD != 0) ? nD[kk] : 0) + nZ,sizeof(int_t) );
-			qpData->log.itLog[0].prevIeqStatus[kk] = (int_t*)calloc( ((nD != 0) ? nD[kk] : 0) + nZ,sizeof(int_t) );
+			qpData->log.itLog[0].ieqStatus[kk] = (int_t*)qpDUNES_calloc( ((nD != 0) ? nD[kk] : 0) + nZ,sizeof(int_t) );
+			qpData->log.itLog[0].prevIeqStatus[kk] = (int_t*)qpDUNES_calloc( ((nD != 0) ? nD[kk] : 0) + nZ,sizeof(int_t) );
 		}
 	}
 
@@ -214,52 +214,52 @@ interval_t* qpDUNES_allocInterval(	qpData_t* const qpData,
 								uint_t nD
 								)
 {
-	interval_t* interval = (interval_t*)calloc( 1,sizeof(interval_t) );
+	interval_t* interval = (interval_t*)qpDUNES_calloc( 1,sizeof(interval_t) );
 
 	interval->nD = nD;
 	interval->nV = nV;
 
-	interval->H.data = (real_t*)calloc( nV*nV,sizeof(real_t) );
+	interval->H.data = (real_t*)qpDUNES_calloc( nV*nV,sizeof(real_t) );
 	interval->H.sparsityType = QPDUNES_MATRIX_UNDEFINED;
-	interval->cholH.data = (real_t*)calloc( nV*nV,sizeof(real_t) );
+	interval->cholH.data = (real_t*)qpDUNES_calloc( nV*nV,sizeof(real_t) );
 	interval->cholH.sparsityType = QPDUNES_MATRIX_UNDEFINED;
 
-	interval->g.data  = (real_t*)calloc( nV,sizeof(real_t) );
+	interval->g.data  = (real_t*)qpDUNES_calloc( nV,sizeof(real_t) );
 
-	interval->q.data  = (real_t*)calloc( nV,sizeof(real_t) );
+	interval->q.data  = (real_t*)qpDUNES_calloc( nV,sizeof(real_t) );
 
-	interval->C.data = (real_t*)calloc( nX*nV,sizeof(real_t) );
+	interval->C.data = (real_t*)qpDUNES_calloc( nX*nV,sizeof(real_t) );
 	interval->C.sparsityType = QPDUNES_MATRIX_UNDEFINED;
-	interval->c.data = (real_t*)calloc( nX,sizeof(real_t) );
+	interval->c.data = (real_t*)qpDUNES_calloc( nX,sizeof(real_t) );
 
-	interval->zLow.data = (real_t*)calloc( nV,sizeof(real_t) );
-	interval->zUpp.data = (real_t*)calloc( nV,sizeof(real_t) );
+	interval->zLow.data = (real_t*)qpDUNES_calloc( nV,sizeof(real_t) );
+	interval->zUpp.data = (real_t*)qpDUNES_calloc( nV,sizeof(real_t) );
 
-	interval->D.data = (real_t*)calloc(  nD*nV,sizeof(real_t) );
+	interval->D.data = (real_t*)qpDUNES_calloc(  nD*nV,sizeof(real_t) );
 	interval->D.sparsityType = QPDUNES_MATRIX_UNDEFINED;
-	interval->dLow.data = (real_t*)calloc( nD,sizeof(real_t) );
-	interval->dUpp.data = (real_t*)calloc( nD,sizeof(real_t) );
+	interval->dLow.data = (real_t*)qpDUNES_calloc( nD,sizeof(real_t) );
+	interval->dUpp.data = (real_t*)qpDUNES_calloc( nD,sizeof(real_t) );
 
-	interval->z.data = (real_t*)calloc( nV,sizeof(real_t) );
+	interval->z.data = (real_t*)qpDUNES_calloc( nV,sizeof(real_t) );
 
-	interval->y.data = (real_t*)calloc( 2*nV + 2*nD,sizeof(real_t) );	/* TODO: clean multiplier definition */
+	interval->y.data = (real_t*)qpDUNES_calloc( 2*nV + 2*nD,sizeof(real_t) );	/* TODO: clean multiplier definition */
 
-	interval->lambdaK.data = (real_t*)calloc( nX,sizeof(real_t) );
+	interval->lambdaK.data = (real_t*)qpDUNES_calloc( nX,sizeof(real_t) );
 	interval->lambdaK.isDefined = QPDUNES_TRUE;							/* define both lambda parts by default */
-	interval->lambdaK1.data = (real_t*)calloc( nX,sizeof(real_t) );
+	interval->lambdaK1.data = (real_t*)qpDUNES_calloc( nX,sizeof(real_t) );
 	interval->lambdaK1.isDefined = QPDUNES_TRUE;
 
 	/* get memory for clipping QP solver */
-	interval->qpSolverClipping.qStep.data  = (real_t*)calloc( nV,sizeof(real_t) );
-	interval->qpSolverClipping.zUnconstrained.data = (real_t*)calloc( nV,sizeof(real_t) );
-	interval->qpSolverClipping.dz.data = (real_t*)calloc( nV,sizeof(real_t) );
+	interval->qpSolverClipping.qStep.data  = (real_t*)qpDUNES_calloc( nV,sizeof(real_t) );
+	interval->qpSolverClipping.zUnconstrained.data = (real_t*)qpDUNES_calloc( nV,sizeof(real_t) );
+	interval->qpSolverClipping.dz.data = (real_t*)qpDUNES_calloc( nV,sizeof(real_t) );
 
 	/* get memory for qpOASES QP solver */
 	/* TODO: do this only if needed later on in code generated / static memory version */
 	/* TODO: utilize special bound version of qpOASES later on for full Hessians, but box constraints */
 	#ifndef __SIMPLE_BOUNDS_ONLY__
 	interval->qpSolverQpoases.qpoasesObject = qpOASES_contructor( qpData, nV, nD );
-	interval->qpSolverQpoases.qFullStep.data  = (real_t*)calloc( nV,sizeof(real_t) );
+	interval->qpSolverQpoases.qFullStep.data  = (real_t*)qpDUNES_calloc( nV,sizeof(real_t) );
 	#endif /* __SIMPLE_BOUNDS_ONLY__ */
 
 
