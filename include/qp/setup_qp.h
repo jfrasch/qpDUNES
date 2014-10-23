@@ -39,7 +39,7 @@
 #include <assert.h>
 #include <qp/types.h>
 #include <qp/matrix_vector.h>
-#include <qp/utils.h>
+#include <qp/qpdunes_utils.h>
 
 
 return_t qpDUNES_setup(	qpData_t* const qpData,

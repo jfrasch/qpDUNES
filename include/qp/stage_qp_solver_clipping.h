@@ -36,7 +36,7 @@
 
 #include <qp/types.h>
 #include <qp/matrix_vector.h>
-#include <qp/utils.h>
+#include <qp/qpdunes_utils.h>
 #include <assert.h>
 
 /** ... */

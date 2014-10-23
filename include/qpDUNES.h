@@ -39,7 +39,7 @@ extern "C"
 #include <qp/stage_qp_solver_clipping.h>
 #include <qp/stage_qp_solver_qpoases.hpp>
 #include <qp/dual_qp.h>
-#include <qp/utils.h>
+#include <qp/qpdunes_utils.h>
 
 #ifdef __cplusplus
 }

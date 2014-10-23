@@ -84,6 +84,11 @@ IF( NOT CMAKE_BUILD_TYPE )
 	)
 ENDIF( NOT CMAKE_BUILD_TYPE )
 
+OPTION( QPDUNES_SIMPLE_BOUNDS_ONLY
+	"Enable compilation of the library for simple bounds only"
+	ON
+)
+
 OPTION( QPDUNES_USE_ASSERTS
 	"Check return values of routines rigorously (useful for debugging)"
 	OFF
@@ -120,6 +125,16 @@ OPTION( QPDUNES_PARALLEL
 	OFF
 )
 
+OPTION( QPDUNES_WITH_LAPACK
+	"Build qpOASES using original LAPACK routines"
+	OFF
+)
+
+OPTION( QPDUNES_WITH_BLAS
+	"Build qpOASES using original BLAS routines"
+	OFF
+)
+
 ################################################################################
 #
 # Compiler settings
@@ -127,11 +142,14 @@ OPTION( QPDUNES_PARALLEL
 ################################################################################
 
 SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -Wall -Wextra -pedantic -Wshadow -g -finline-functions -std=c99" )
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__SIMPLE_BOUNDS_ONLY__")
 
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D__DEBUG__")
 
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
+
+IF ( QPDUNES_SIMPLE_BOUNDS_ONLY )
+   ADD_DEFINITIONS( -D__SIMPLE_BOUNDS_ONLY__ )
+ENDIF()
 
 IF ( QPDUNES_USE_ASSERTS )
    ADD_DEFINITIONS( -D__USE_ASSERTS__ )
@@ -198,7 +216,7 @@ SET( qpDUNES_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/include/qp/setup_qp.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/qp/stage_qp_solver_clipping.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/qp/types.h
-	${CMAKE_CURRENT_SOURCE_DIR}/include/qp/utils.h
+	${CMAKE_CURRENT_SOURCE_DIR}/include/qp/qpdunes_utils.h
 	# mpcDUNES
 	${CMAKE_CURRENT_SOURCE_DIR}/interfaces/mpc/setup_mpc.h
 )
@@ -208,10 +226,82 @@ SET( qpDUNES_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/stage_qp_solver_clipping.c
 	${CMAKE_CURRENT_SOURCE_DIR}/src/matrix_vector.c
 	${CMAKE_CURRENT_SOURCE_DIR}/src/setup_qp.c
-	${CMAKE_CURRENT_SOURCE_DIR}/src/utils.c
+	${CMAKE_CURRENT_SOURCE_DIR}/src/qpdunes_utils.c
 	# mpcDUNES
 	${CMAKE_CURRENT_SOURCE_DIR}/interfaces/mpc/setup_mpc.c
 )
+
+IF ( NOT QPDUNES_SIMPLE_BOUNDS_ONLY )
+
+   	ENABLE_LANGUAGE( CXX )
+
+   	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wshadow -finline-functions -fPIC -DLINUX" )
+
+   	INCLUDE_DIRECTORIES(	
+        # qpOASES include paths
+		./externals/qpOASES-3.0beta
+		./externals/qpOASES-3.0beta/include
+	)
+
+	SET ( qpDUNES_HEADERS ${qpDUNES_HEADERS}
+		${CMAKE_CURRENT_SOURCE_DIR}/include/qp/stage_qp_solver_qpoases.hpp
+	)
+
+	SET ( qpDUNES_SOURCES ${qpDUNES_SOURCES}
+		${CMAKE_CURRENT_SOURCE_DIR}/src/stage_qp_solver_qpoases.cpp
+	)
+
+	SET( QPOASES_SOURCES
+    	${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/Bounds.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/Constraints.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/Flipper.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/Indexlist.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/LoggedSQProblem.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/Matrices.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/MessageHandling.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/Options.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/QProblem.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/QProblemB.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/SQProblem.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/SubjectTo.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/Utils.cpp
+	)
+
+	FILE( GLOB QPOASES_HEADERS 
+		${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/include/*.hpp )
+
+	# Find LAPACK
+	IF ( QPDUNES_WITH_LAPACK )
+	    ENABLE_LANGUAGE( Fortran )
+
+		FIND_PACKAGE( LAPACK )
+
+		IF ( NOT LAPACK_FOUND )
+		   SET( QPOASES_SOURCES ${QPOASES_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/LAPACKReplacement.cpp )
+		ENDIF()
+
+	ELSE()
+		 SET( QPOASES_SOURCES ${QPOASES_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/LAPACKReplacement.cpp )
+    ENDIF()
+
+	# Find BLAS
+	IF ( QPDUNES_WITH_BLAS )
+		ENABLE_LANGUAGE( Fortran )
+
+		FIND_PACKAGE( BLAS )
+
+		IF ( NOT BLAS_FOUND )
+		    SET( QPOASES_SOURCES ${QPOASES_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/BLASReplacement.cpp )
+		ENDIF()
+
+	ELSE()
+		SET( QPOASES_SOURCES ${QPOASES_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/externals/qpOASES-3.0beta/src/BLASReplacement.cpp )
+	ENDIF()
+
+	SET( qpDUNES_HEADERS ${qpDUNES_HEADERS} ${QPOASES_HEADERS} )
+	SET( qpDUNES_SOURCES ${qpDUNES_SOURCES} ${QPOASES_SOURCES} )
+
+ENDIF()
 
 ################################################################################
 #
@@ -231,6 +321,20 @@ ADD_LIBRARY(
 )
 
 TARGET_LINK_LIBRARIES( qpdunes m )
+
+IF ( QPDUNES_WITH_LAPACK AND LAPACK_FOUND )
+	TARGET_LINK_LIBRARIES(
+		qpdunes
+		${LAPACK_LIBRARIES}
+	)
+ENDIF()
+
+IF ( QPDUNES_WITH_BLAS AND BLAS_FOUND )
+	TARGET_LINK_LIBRARIES(
+		qpdunes
+		${BLAS_LIBRARIES}
+	)
+ENDIF()
 
 #
 # Build the examples
@@ -297,6 +401,14 @@ SET( qpDUNES_ENV_INCLUDE_DIRS
 	${PROJECT_SOURCE_DIR}/interfaces
 	${PROJECT_SOURCE_DIR}/interfaces/mpc
 )
+
+IF (NOT QPDUNES_SIMPLE_BOUNDS_ONLY )
+   	SET( qpDUNES_ENV_INCLUDE_DIRS
+	    ${qpDUNES_ENV_INCLUDE_DIRS}
+		${PROJECT_SOURCE_DIR}/externals/qpOASES-3.0beta
+		${PROJECT_SOURCE_DIR}/externals/qpOASES-3.0beta/include
+	)
+ENDIF()
 
 SET( qpDUNES_ENV_LIBRARY_DIRS
 	${LIBRARY_OUTPUT_PATH}

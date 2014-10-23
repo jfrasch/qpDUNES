@@ -40,7 +40,7 @@
 #include <qp/types.h>
 #include <qp/matrix_vector.h>
 #include <qp/setup_qp.h>
-#include <qp/utils.h>
+#include <qp/qpdunes_utils.h>
 
 
 return_t qpDUNES_solve(	qpData_t* const qpData

@@ -35,7 +35,7 @@
 #include <assert.h>
 #include <math.h>
 
-#include <qp/utils.h>
+#include <qp/qpdunes_utils.h>
 
 
 /* ----------------------------------------------
