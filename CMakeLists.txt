@@ -235,7 +235,8 @@ IF ( NOT QPDUNES_SIMPLE_BOUNDS_ONLY )
 
    	ENABLE_LANGUAGE( CXX )
 
-   	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wshadow -finline-functions -fPIC -DLINUX" )
+   	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wshadow -finline-functions -fPIC" )
+	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLINUX -D__NO_COPYRIGHT__" )
 
    	INCLUDE_DIRECTORIES(	
         # qpOASES include paths
