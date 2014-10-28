@@ -52,7 +52,7 @@ QPDUNES_OBJECTS = \
 	stage_qp_solver_clipping.${OBJEXT} \
 	matrix_vector.${OBJEXT} \
 	setup_qp.${OBJEXT} \
-	utils.${OBJEXT}
+	qpdunes_utils.${OBJEXT}
 
 
 ##  add qpOASES interface if requested
@@ -81,7 +81,7 @@ dual_qp.${OBJEXT}: \
 	${IDIR}/qp/stage_qp_solver_qpoases.hpp \
 	${IDIR}/qp/matrix_vector.h \
 	${IDIR}/qp/setup_qp.h \
-	${IDIR}/qp/utils.h \
+	${IDIR}/qp/qpdunes_utils.h \
 	${IDIR}/qp/types.h 
 	@echo "Creating" $@
 	${CC} ${DEF_TARGET} -c ${IFLAGS} ${CCFLAGS} dual_qp.c
@@ -89,7 +89,7 @@ dual_qp.${OBJEXT}: \
 stage_qp_solver_clipping.${OBJEXT}: \
 	stage_qp_solver_clipping.c \
 	${IDIR}/qp/stage_qp_solver_clipping.h \
-	${IDIR}/qp/utils.h \
+	${IDIR}/qp/qpdunes_utils.h \
 	${IDIR}/qp/types.h
 	@echo "Creating" $@
 	${CC} ${DEF_TARGET} -c ${IFLAGS} ${CCFLAGS} stage_qp_solver_clipping.c
@@ -97,7 +97,7 @@ stage_qp_solver_clipping.${OBJEXT}: \
 stage_qp_solver_qpoases.${OBJEXT}: \
 	stage_qp_solver_qpoases.cpp \
 	${IDIR}/qp/stage_qp_solver_qpoases.hpp \
-	${IDIR}/qp/utils.h \
+	${IDIR}/qp/qpdunes_utils.h \
 	${IDIR}/qp/types.h
 	@echo "Creating" $@
 	${CPP} ${DEF_TARGET} -c ${IFLAGS} ${CPPFLAGS} stage_qp_solver_qpoases.cpp
@@ -105,14 +105,14 @@ stage_qp_solver_qpoases.${OBJEXT}: \
 matrix_vector.${OBJEXT}: \
 	matrix_vector.c \
 	${IDIR}/qp/matrix_vector.h \
-	${IDIR}/qp/utils.h \
+	${IDIR}/qp/qpdunes_utils.h \
 	${IDIR}/qp/types.h
 	@echo "Creating" $@
 	${CC} ${DEF_TARGET} -c ${IFLAGS} ${CCFLAGS} matrix_vector.c
 
 setup_qp.${OBJEXT}: \
 	setup_qp.c \
-	${IDIR}/qp/utils.h \
+	${IDIR}/qp/qpdunes_utils.h \
 	${IDIR}/qp/types.h
 	@echo "Creating" $@
 	${CC} ${DEF_TARGET} -c ${IFLAGS} ${CCFLAGS} setup_qp.c
