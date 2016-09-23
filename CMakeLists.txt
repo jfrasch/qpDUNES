@@ -135,6 +135,11 @@ OPTION( QPDUNES_WITH_BLAS
 	OFF
 )
 
+OPTION( QPDUNES_MAKE_EXAMPLES 
+    "Make qpDUNES examples"
+    ON
+)
+
 ################################################################################
 #
 # Compiler settings
@@ -342,25 +347,26 @@ ENDIF()
 # NOTE: Assumption is that all examples are in C and that one example
 # is in exactly one file.
 #
-
-FILE( GLOB qpDUNES_EXAMPLES ${CMAKE_CURRENT_SOURCE_DIR}/examples/*.c )
-FOREACH( EXAMPLE ${qpDUNES_EXAMPLES} )
-	GET_FILENAME_COMPONENT( EXEC_NAME ${EXAMPLE} NAME_WE )
-	ADD_EXECUTABLE( example_${EXEC_NAME} ${EXAMPLE} )
-	TARGET_LINK_LIBRARIES(
-		example_${EXEC_NAME}
-		qpdunes
-	)
-	SET_TARGET_PROPERTIES( example_${EXEC_NAME} 
-		PROPERTIES
-		OUTPUT_NAME "${EXEC_NAME}"		   
-	)
-	ADD_TEST(
-		NAME test_${EXEC_NAME}
-		WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
-		COMMAND ${EXEC_NAME}
-	)
-ENDFOREACH()
+IF(QPDUNES_MAKE_EXAMPLES)
+	FILE( GLOB qpDUNES_EXAMPLES ${CMAKE_CURRENT_SOURCE_DIR}/examples/*.c )
+	FOREACH( EXAMPLE ${qpDUNES_EXAMPLES} )
+		GET_FILENAME_COMPONENT( EXEC_NAME ${EXAMPLE} NAME_WE )
+		ADD_EXECUTABLE( example_${EXEC_NAME} ${EXAMPLE} )
+		TARGET_LINK_LIBRARIES(
+			example_${EXEC_NAME}
+			qpdunes
+		)
+		SET_TARGET_PROPERTIES( example_${EXEC_NAME} 
+			PROPERTIES
+			OUTPUT_NAME "${EXEC_NAME}"		   
+		)
+		ADD_TEST(
+			NAME test_${EXEC_NAME}
+			WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
+			COMMAND ${EXEC_NAME}
+		)
+	ENDFOREACH()
+ENDIF()
 
 ################################################################################
 #
