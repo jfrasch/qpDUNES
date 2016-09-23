@@ -135,6 +135,11 @@ OPTION( QPDUNES_WITH_BLAS
 	OFF
 )
 
+OPTION( QPDUNES_MAKE_EXAMPLES 
+    "Make qpDUNES examples"
+    ON
+)
+
 ################################################################################
 #
 # Compiler settings
@@ -342,8 +347,6 @@ ENDIF()
 # NOTE: Assumption is that all examples are in C and that one example
 # is in exactly one file.
 #
-OPTION(QPDUNES_MAKE_EXAMPLES "Make qpDUNES examples" ON)
-
 IF(QPDUNES_MAKE_EXAMPLES)
 	FILE( GLOB qpDUNES_EXAMPLES ${CMAKE_CURRENT_SOURCE_DIR}/examples/*.c )
 	FOREACH( EXAMPLE ${qpDUNES_EXAMPLES} )
